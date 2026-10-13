@@ -1,0 +1,75 @@
+.logo-link {
+    display: block;
+    text-decoration: none;
+}
+
+.is-hidden {
+    display: none;
+}
+
+.brand-home-link,
+.feed-profile-link {
+    text-decoration: none;
+}
+
+.feed-username-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.users-title-icon {
+    color: #8b5cf6;
+}
+
+.users-empty-state {
+    grid-column: 1 / -1;
+    padding: 40px;
+    color: var(--text-sub);
+    text-align: center;
+}
+
+.friends-search-icon {
+    color: var(--text-sub);
+}
+
+.friends-empty-state {
+    padding: 40px;
+    color: var(--text-sub);
+    text-align: center;
+}
+
+.empty-comments {
+    padding: 40px;
+    color: var(--text-sub);
+    text-align: center;
+}
+
+.add-more-icon {
+    font-size: 20px;
+}
+
+.feed-like-icon {
+    color: #ec4899;
+}
+
+.reply-cancel-icon {
+    cursor: pointer;
+}
+
+.debug-table {
+    border-collapse: collapse;
+}
+
+.debug-table th,
+.debug-table td {
+    border: 1px solid currentColor;
+    padding: 8px;
+}
+
+.debug-match-yes {
+    color: green;
+}
+
+.debug-match-no {
+    color: red;
+}

@@ -1,0 +1,125 @@
+<?php
+// login.php - Nexagram Modern Glassmorphism Login Page
+session_start();
+require_once 'config.php';
+require_once 'lang.php';
+
+// Redirect if already logged in
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+$error_message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if (!empty($username) && !empty($password)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+            $stmt->execute([$username, $username]);
+            $user = $stmt->fetch();
+
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $preferred_language = $user['language_code'] ?? null;
+                if (is_string($preferred_language) && isset($available_languages[$preferred_language])) {
+                    $_SESSION['lang'] = $preferred_language;
+                }
+                header("Location: index.php");
+                exit;
+            } else {
+                $error_message = __('login_invalid');
+            }
+        } catch (\PDOException $e) {
+            $error_message = __('database_error');
+        }
+    } else {
+        $error_message = __('required_fields');
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexagram • <?php echo htmlspecialchars(__('login_title'), ENT_QUOTES, 'UTF-8'); ?></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../js/theme-init.js"></script>
+    <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="../css/utilities.css">
+</head>
+
+<body>
+
+    <div class="top-lang-bar">
+        <i class="fa-solid fa-globe"></i>
+        <select aria-label="<?php echo htmlspecialchars(__('language'), ENT_QUOTES, 'UTF-8'); ?>" onchange="window.location.assign(this.value)">
+            <?php foreach ($available_languages as $code => $name): ?>
+                <option value="?lang=<?php echo rawurlencode($code); ?>" <?php echo $current_lang === $code ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($name . ' (' . $code . ')', ENT_QUOTES, 'UTF-8'); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <button class="theme-toggle-fixed" id="themeToggle" title="<?php echo htmlspecialchars(__('dark_mode'), ENT_QUOTES, 'UTF-8'); ?>">
+        <i class="fa-solid fa-moon" id="themeIcon"></i>
+    </button>
+
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
+    <div class="login-card">
+        <div class="brand-header">
+            <a href="index.php" class="brand-home-link">
+                <h1 class="brand-logo">Nexagram</h1>
+            </a>
+            <p class="brand-subtitle"><?php echo htmlspecialchars(__('login_subtitle'), ENT_QUOTES, 'UTF-8'); ?></p>
+        </div>
+
+        <?php if (!empty($error_message)): ?>
+            <div class="alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span><?php echo htmlspecialchars($error_message); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <form action="login.php" method="POST">
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="text" name="username" class="form-input" placeholder="<?php echo htmlspecialchars(__('login_username_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="username">
+                    <i class="fa-regular fa-user input-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="password" name="password" id="passwordInput" class="form-input" placeholder="<?php echo htmlspecialchars(__('login_password_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="current-password">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <i class="fa-regular fa-eye toggle-password" id="togglePassword"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn"><?php echo htmlspecialchars(__('login_button'), ENT_QUOTES, 'UTF-8'); ?></button>
+        </form>
+
+        <div class="divider">
+            <span><?php echo htmlspecialchars(__('login_or'), ENT_QUOTES, 'UTF-8'); ?></span>
+        </div>
+
+        <div class="footer-text">
+            <?php echo htmlspecialchars(__('no_account'), ENT_QUOTES, 'UTF-8'); ?>
+            <a href="register.php" class="footer-link"><?php echo htmlspecialchars(__('register_link'), ENT_QUOTES, 'UTF-8'); ?></a>
+        </div>
+    </div>
+
+    <script src="../js/login.js"></script>
+</body>
+
+</html>
