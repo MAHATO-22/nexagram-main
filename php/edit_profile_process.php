@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'config.php';
+require_once 'lang.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -42,12 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_stmt = $pdo->prepare($update_sql);
         $update_stmt->execute([$bio, $image_destination, $user_id]);
 
-        $message = 'プロフィールが更新されました！';
+        $message = __('profile_updated_success');
         echo '<!DOCTYPE html><html><body><div id="redirect-notice" hidden data-message="' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '" data-target="profile.php"></div><script src="../js/redirect-alert.js"></script></body></html>';
         exit;
 
     } catch (\PDOException $e) {
-        die("エラー: " . $e->getMessage());
+        error_log('Profile update failed: ' . $e->getMessage());
+        die(htmlspecialchars(__('database_error'), ENT_QUOTES, 'UTF-8'));
     }
 } else {
     header("Location: edit_profile.php");

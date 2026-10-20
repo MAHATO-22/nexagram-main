@@ -15,5 +15,34 @@
     "workbench.statusBar.visible": true,
     "editor.bracketPairColorization.enabled": true,
     "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
-    "editor.guides.bracketPairs": true
+    "editor.guides.bracketPairs": true,
+    "claudeCode.spinnerVerbs": {
+        "mode": "append",
+        "verbs": []
+    }
 }
+
+// {
+//   "env": {
+//     "ANTHROPIC_API_KEY": "<sk-9225ec0c2a169508-df23de-503b9ed0>",
+//     "ANTHROPIC_BASE_URL": "http://localhost:20128/v1",
+//     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+//     "ANTHROPIC_DEFAULT_OPUS_MODEL": "oc/deepseek-v4-flash-free",
+//     "ANTHROPIC_DEFAULT_SONNET_MODEL": "oc/big-pickle",
+//     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "nvidia/minimaxai/minimax-m2.7"
+//   },
+//   "model": "opus",
+// // For Windows;-
+//   "statusLine": {
+//     "type": "command",
+//     "command": "node \"C:\\Users\\yourDeviceName(250153)\\.claude\\statusline.js\""
+//   },
+// // For Mac:-
+// //  "statusLine": { 
+// //    "type": "command", 
+// //    "command": "node ~/.claude/statusline.js" 
+// //   },
+// //   "effortLevel": "low",
+// //   "theme": "dark",
+// //   "switchModelsOnFlag": false
+// }

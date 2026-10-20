@@ -50,7 +50,7 @@ if (isset($_GET['read_id'])) {
 $stmt = $pdo->prepare("
     SELECT n.*, u.username as actor_name, u.profile_image as actor_image 
     FROM notifications n
-    JOIN users u ON n.actor_id = u.id
+    LEFT JOIN users u ON n.actor_id = u.id
     WHERE n.user_id = ?
     ORDER BY n.created_at DESC
     LIMIT 50
@@ -131,18 +131,18 @@ function resolveImagePath($fileName) {
             <?php else: ?>
                 <?php foreach ($notifications as $n): ?>
                     <?php
-                    $avatar = resolveImagePath($n['actor_image']);
-                    $unreadClass = $n['is_read'] == 0 ? 'unread' : '';
-                    
-                    // Determine text & icon based on notification type
+                    $avatar = resolveImagePath($n['actor_image'] ?? null);
+                    $unreadClass = ((int)($n['is_read'] ?? 1) === 0) ? 'unread' : '';
+
+                    $actorName = !empty($n['actor_name']) ? $n['actor_name'] : __('user_deleted');
                     $actionText = "";
                     $iconClass = "fa-solid fa-bell";
                     $iconColor = "icon-comment";
 
                     $is_msg_request = false;
-                    if ($n['type'] === 'message') {
+                    if (($n['type'] ?? null) === 'message') {
                         $rq = $pdo->prepare("SELECT is_request FROM messages WHERE sender_id = ? AND receiver_id = ? ORDER BY id DESC LIMIT 1");
-                        $rq->execute([$n['actor_id'], $current_user_id]);
+                        $rq->execute([(int)($n['actor_id'] ?? 0), $current_user_id]);
                         $rq_row = $rq->fetch();
                         $is_msg_request = $rq_row && (int)$rq_row['is_request'] === 1;
                     }
@@ -177,16 +177,16 @@ function resolveImagePath($fileName) {
                     ?>
                     <a href="notifications.php?read_id=<?php echo $n['id']; ?>" class="notif-card <?php echo $unreadClass; ?>">
                         <?php if ($avatar): ?>
-                            <img src="<?php echo htmlspecialchars($avatar); ?>" class="actor-avatar">
+                            <img src="<?php echo htmlspecialchars($avatar); ?>" class="actor-avatar" alt="<?php echo htmlspecialchars($actorName); ?>">
                         <?php else: ?>
-                            <div class="avatar-placeholder"><?php echo mb_substr($n['actor_name'], 0, 1, 'UTF-8'); ?></div>
+                            <div class="avatar-placeholder"><?php echo mb_substr($actorName, 0, 1, 'UTF-8'); ?></div>
                         <?php endif; ?>
 
                         <div class="notif-body">
                             <div class="notif-text">
-                                <strong><?php echo htmlspecialchars($n['actor_name']); ?></strong> <?php echo $actionText; ?>
+                                <strong><?php echo htmlspecialchars($actorName); ?></strong> <?php echo $actionText; ?>
                             </div>
-                            <div class="notif-time"><?php echo date('M d, H:i', strtotime($n['created_at'])); ?></div>
+                            <div class="notif-time"><?php echo date('M d, H:i', strtotime($n['created_at'] ?? 'now')); ?></div>
                         </div>
 
                         <i class="<?php echo $iconClass . ' ' . $iconColor; ?> type-icon"></i>
@@ -198,7 +198,53 @@ function resolveImagePath($fileName) {
 
     <div id="page-config" hidden data-config="<?php echo htmlspecialchars(json_encode(['values' => [__('dark_mode'), __('light_mode')]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>"></div>
     <script src="../js/page-config.js"></script>
-    <script src="../js/notifications.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const moreToggle = document.getElementById('moreToggle');
+            const moreMenu = document.getElementById('moreMenu');
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            if (!moreToggle || !moreMenu || !themeToggle || !themeIcon || !themeText) return;
+
+            const darkModeText = window.NEXAGRAM_CONFIG && window.NEXAGRAM_CONFIG.values ? window.NEXAGRAM_CONFIG.values[0] : 'Dark mode';
+            const lightModeText = window.NEXAGRAM_CONFIG && window.NEXAGRAM_CONFIG.values ? window.NEXAGRAM_CONFIG.values[1] : 'Light mode';
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                themeIcon.className = theme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+                themeText.textContent = theme === 'dark' ? darkModeText : lightModeText;
+            }
+
+            moreToggle.addEventListener('click', () => {
+                const isOpen = moreMenu.classList.toggle('show');
+                moreToggle.setAttribute('aria-expanded', String(isOpen));
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!moreMenu.contains(event.target) && !moreToggle.contains(event.target)) {
+                    moreMenu.classList.remove('show');
+                    moreToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    moreMenu.classList.remove('show');
+                    moreToggle.setAttribute('aria-expanded', 'false');
+                    moreToggle.focus();
+                }
+            });
+
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+
+            setTheme(localStorage.getItem('theme') || 'dark');
+        });
+    </script>
     <script src="../js/badge.js"></script>
     <?php include __DIR__ . '/suggestions_widget.php'; ?>
 </body>

@@ -106,9 +106,7 @@ document.addEventListener('change', function (event) {
 
     if (!target) return;
 
-    if (target.dataset.uiAction === 'language-select') {
-        window.location.assign(target.value);
-    } else if (target.dataset.uiAction === 'preview-image') {
+    if (target.dataset.uiAction === 'preview-image') {
         if (typeof window.previewImage !== 'function') {
             console.error('Nexagram action handler "previewImage" is unavailable.');
             return;

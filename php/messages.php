@@ -30,10 +30,14 @@ foreach ($blk_stmt->fetchAll() as $b) {
     $blocked_peers[$other] = ((int)$b['blocker_id'] === $me) ? 'mine' : 'peer';
 }
 
-// All users except me
-$users_stmt = $pdo->prepare("SELECT id, username, profile_image FROM users WHERE id <> ? ORDER BY username ASC");
-$users_stmt->execute([$me]);
-$all_users = $users_stmt->fetchAll();
+// Accepted friends only
+$friends_stmt = $pdo->prepare("SELECT users.id, users.username, users.profile_image
+    FROM friend_requests fr
+    JOIN users ON users.id = IF(fr.sender_id = ?, fr.receiver_id, fr.sender_id)
+    WHERE (fr.sender_id = ? OR fr.receiver_id = ?) AND fr.status = 'accepted'
+    ORDER BY users.username ASC");
+$friends_stmt->execute([$me, $me, $me]);
+$all_users = $friends_stmt->fetchAll();
 $users_by_id = [];
 foreach ($all_users as $u) $users_by_id[$u['id']] = $u;
 

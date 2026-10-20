@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-                $stmt = $pdo->prepare("INSERT INTO users (role, user_code, student_id, username, email, password, department, class_name, school_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$role, $user_code, $user_code, $username, $email, $hashedPassword, $department, $class_name !== '' ? $class_name : null, $school_name !== '' ? $school_name : null]);
+                $stmt = $pdo->prepare("INSERT INTO users (role, user_code, student_id, username, email, password, department, class_name, school_name, language_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$role, $user_code, $user_code, $username, $email, $hashedPassword, $department, $class_name !== '' ? $class_name : null, $school_name !== '' ? $school_name : null, $current_lang]);
 
                 $success = __('registration_success');
             }
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexagram • <?php echo __('register_title') ?? '新規登録'; ?></title>
+    <title>Nexagram • <?php echo htmlspecialchars(__('register_title'), ENT_QUOTES, 'UTF-8'); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/register.css">
     <link rel="stylesheet" href="../css/utilities.css">
@@ -57,21 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
 
-    <!-- Language Selector Dropdown -->
-    <div class="top-lang-bar">
-        <i class="fa-solid fa-globe"></i>
-        <select data-ui-action="language-select">
-            <?php foreach ($available_languages as $code => $name): ?>
-                <option value="?lang=<?php echo rawurlencode($code); ?>" <?php echo $current_lang === $code ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($name . ' (' . $code . ')', ENT_QUOTES, 'UTF-8'); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
     <div class="register-card">
+        <form method="get" action="register.php" class="language-picker">
+            <label for="register-language"><?php echo htmlspecialchars(__('language'), ENT_QUOTES, 'UTF-8'); ?></label>
+            <select id="register-language" name="lang" onchange="this.form.submit()">
+                <?php foreach ($available_languages as $code => $name): ?>
+                    <option value="<?php echo htmlspecialchars($code, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $current_lang === $code ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </form>
         <a href="index.php" class="logo logo-link">Nexagram</a>
-        <p class="sub-text">キャンパスの仲間とつながり、最新の学内情報をシェアしよう。</p>
+        <p class="sub-text"><?php echo htmlspecialchars(__('reg_subtitle'), ENT_QUOTES, 'UTF-8'); ?></p>
 
         <?php if ($error): ?>
             <div class="message-box error-msg"><?php echo htmlspecialchars($error); ?></div>
@@ -88,10 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Role Selector Toggle -->
             <div class="role-selector">
                 <div class="role-option active" id="btnStudent" data-ui-action="register-role" data-role="student">
-                    <i class="fa-solid fa-graduation-cap"></i> <?php echo __('role_student') ?? '学生 (Student)'; ?>
+                    <i class="fa-solid fa-graduation-cap"></i> <?php echo htmlspecialchars(__('role_student'), ENT_QUOTES, 'UTF-8'); ?>
                 </div>
                 <div class="role-option" id="btnTeacher" data-ui-action="register-role" data-role="teacher">
-                    <i class="fa-solid fa-chalkboard-user"></i> <?php echo __('role_teacher') ?? '教員 (Teacher)'; ?>
+                    <i class="fa-solid fa-chalkboard-user"></i> <?php echo htmlspecialchars(__('role_teacher'), ENT_QUOTES, 'UTF-8'); ?>
                 </div>
             </div>
 

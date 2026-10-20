@@ -19,7 +19,13 @@ if (!in_array($visibility, $allowed_visibilities, true)) {
     $visibility = 'public';
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {$caption = trim($_POST['caption'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $caption = trim($_POST['caption'] ?? '');
+    $requested_visibility = $_POST['visibility'] ?? $visibility;
+    if (!is_string($requested_visibility) || !in_array($requested_visibility, $allowed_visibilities, true)) {
+        $requested_visibility = $visibility;
+    }
+    $visibility = $requested_visibility;
 
     $uploaded_files = [];
 
@@ -76,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {$caption = trim($_POST['caption'] ??
             } catch (\PDOException $e) {
                 if ($pdo->inTransaction()) {$pdo->rollBack();
                 }
-                $error_message = 'データベース登録エラー: ' . $e->getMessage();
+                error_log('Post creation failed: ' . $e->getMessage());
+                $error_message = __('database_error');
             }
         } else {
             $error_message = __('err_empty_post');
@@ -178,6 +185,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {$caption = trim($_POST['caption'] ??
                         <span id="charCounter">0 / 500</span>
                     </div>
                     <textarea name="caption" id="captionInput" class="caption-textarea" maxlength="500" placeholder="<?php echo __('write_caption_placeholder'); ?>"></textarea>
+                </div>
+
+                <div class="visibility-field" style="margin-top: 18px;">
+                    <label for="post-visibility" class="visibility-label"><?php echo __('visibility_target_audience'); ?></label>
+                    <select id="post-visibility" name="visibility" class="visibility-select">
+                        <?php foreach ($allowed_visibilities as $visibility_option): ?>
+                            <option value="<?php echo htmlspecialchars($visibility_option, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $visibility === $visibility_option ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars(__('visibility_' . $visibility_option), ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <!-- Form Action Buttons -->

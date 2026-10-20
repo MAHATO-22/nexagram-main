@@ -57,17 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
 
-    <div class="top-lang-bar">
-        <i class="fa-solid fa-globe"></i>
-        <select aria-label="<?php echo htmlspecialchars(__('language'), ENT_QUOTES, 'UTF-8'); ?>" onchange="window.location.assign(this.value)">
-            <?php foreach ($available_languages as $code => $name): ?>
-                <option value="?lang=<?php echo rawurlencode($code); ?>" <?php echo $current_lang === $code ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($name . ' (' . $code . ')', ENT_QUOTES, 'UTF-8'); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
     <button class="theme-toggle-fixed" id="themeToggle" title="<?php echo htmlspecialchars(__('dark_mode'), ENT_QUOTES, 'UTF-8'); ?>">
         <i class="fa-solid fa-moon" id="themeIcon"></i>
     </button>
@@ -76,6 +65,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="ambient-orb orb-2"></div>
 
     <div class="login-card">
+        <form method="get" action="login.php" class="language-picker">
+            <label for="login-language"><?php echo htmlspecialchars(__('language'), ENT_QUOTES, 'UTF-8'); ?></label>
+            <select id="login-language" name="lang" onchange="this.form.submit()">
+                <?php foreach ($available_languages as $code => $name): ?>
+                    <option value="<?php echo htmlspecialchars($code, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $current_lang === $code ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </form>
         <div class="brand-header">
             <a href="index.php" class="brand-home-link">
                 <h1 class="brand-logo">Nexagram</h1>
