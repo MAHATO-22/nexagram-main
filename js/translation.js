@@ -15,15 +15,21 @@
         'mn-MN': 'mn',
         'vi-VN': 'vi'
     };
-    const targetLanguage = languageAliases[document.documentElement.lang] || document.documentElement.lang.split('-')[0];
+    const preferredLanguage = document.documentElement.dataset.translationTarget || document.documentElement.lang;
+    const targetLanguage = languageAliases[preferredLanguage] || preferredLanguage.split('-')[0];
     const unavailableMessage = document.documentElement.dataset.translationUnavailable;
     const failedMessage = document.documentElement.dataset.translationFailed;
     const loadingMessage = document.documentElement.dataset.translationLoading;
     const tooLongMessage = document.documentElement.dataset.translationTooLong;
-    const autoTranslateKey = 'nexagram-auto-translate';
+    const autoTranslateKey = [
+        'nexagram-auto-translate',
+        document.documentElement.dataset.translationUser || 'anonymous',
+        targetLanguage
+    ].join(':');
     const autoTranslateButton = document.querySelector('[data-auto-translate]');
     const autoTranslateStatus = document.querySelector('[data-auto-translate-status]');
-    let autoTranslateEnabled = window.localStorage.getItem(autoTranslateKey) === 'true';
+    const savedAutoTranslate = window.localStorage.getItem(autoTranslateKey);
+    let autoTranslateEnabled = savedAutoTranslate === null || savedAutoTranslate === 'true';
     let autoTranslateRunning = false;
     const translationQueue = new Set();
 
