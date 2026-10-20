@@ -28,6 +28,107 @@ function sanitizeMessage($row) {
     ];
 }
 
+function sanitizeGroupMessage($row) {
+    $imagePath = $row['image_path'] ?? null;
+
+    return [
+        'id' => (int)$row['id'],
+        'sender_id' => (int)$row['sender_id'],
+        'sender_username' => $row['sender_username'],
+        'message_text' => $row['message_text'],
+        'image_path' => empty($imagePath) ? null : '../' . ltrim($imagePath, '/'),
+        'created_at' => $row['created_at'],
+    ];
+}
+
+if ($action === 'group_fetch') {
+    $group_id = (int)($_GET['group'] ?? 0);
+    $since = max(0, (int)($_GET['since'] ?? 0));
+    $membership_stmt = $pdo->prepare('SELECT 1 FROM group_chat_members WHERE group_id = ? AND user_id = ?');
+    $membership_stmt->execute([$group_id, $me]);
+    if ($group_id <= 0 || !$membership_stmt->fetchColumn()) {
+        echo json_encode(['error' => 'group_not_found']);
+        exit;
+    }
+
+    $messages_stmt = $pdo->prepare("
+        SELECT gm.*, u.username AS sender_username
+        FROM group_messages gm
+        JOIN users u ON u.id = gm.sender_id
+        WHERE gm.group_id = ? AND gm.id > ?
+        ORDER BY gm.id ASC
+    ");
+    $messages_stmt->execute([$group_id, $since]);
+    $rows = $messages_stmt->fetchAll();
+    if ($rows) {
+        $mark_read_stmt = $pdo->prepare("
+            UPDATE group_chat_members
+            SET last_read_message_id = GREATEST(last_read_message_id, ?)
+            WHERE group_id = ? AND user_id = ?
+        ");
+        $mark_read_stmt->execute([(int)end($rows)['id'], $group_id, $me]);
+    }
+    echo json_encode(['messages' => array_map('sanitizeGroupMessage', $rows)]);
+    exit;
+}
+
+if ($action === 'group_send') {
+    $group_id = (int)($_POST['group'] ?? 0);
+    $submitted_text = $_POST['message_text'] ?? '';
+    if (!is_string($submitted_text)) {
+        echo json_encode(['error' => 'invalid_message']);
+        exit;
+    }
+    $text = trim($submitted_text);
+    $image_destination = null;
+    $membership_stmt = $pdo->prepare('SELECT 1 FROM group_chat_members WHERE group_id = ? AND user_id = ?');
+    $membership_stmt->execute([$group_id, $me]);
+    if ($group_id <= 0 || !$membership_stmt->fetchColumn()) {
+        echo json_encode(['error' => 'group_not_found']);
+        exit;
+    }
+
+    if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $file = $_FILES['image'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            echo json_encode(['error' => 'invalid_file_type']);
+            exit;
+        }
+        if ($file['error'] !== UPLOAD_ERR_OK || $file['size'] >= 10000000) {
+            echo json_encode(['error' => 'upload_failed_or_too_large']);
+            exit;
+        }
+
+        $image_destination = 'uploads/MSG_' . uniqid('', true) . '.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], __DIR__ . '/../' . $image_destination)) {
+            echo json_encode(['error' => 'move_failed']);
+            exit;
+        }
+    }
+
+    if ($text === '' && $image_destination === null) {
+        echo json_encode(['error' => 'empty_message']);
+        exit;
+    }
+
+    $insert_stmt = $pdo->prepare('INSERT INTO group_messages (group_id, sender_id, message_text, image_path) VALUES (?, ?, ?, ?)');
+    $insert_stmt->execute([$group_id, $me, $text, $image_destination]);
+    $message_id = (int)$pdo->lastInsertId();
+    $mark_read_stmt = $pdo->prepare('UPDATE group_chat_members SET last_read_message_id = ? WHERE group_id = ? AND user_id = ?');
+    $mark_read_stmt->execute([$message_id, $group_id, $me]);
+
+    $message_stmt = $pdo->prepare("
+        SELECT gm.*, u.username AS sender_username
+        FROM group_messages gm
+        JOIN users u ON u.id = gm.sender_id
+        WHERE gm.id = ? AND gm.group_id = ?
+    ");
+    $message_stmt->execute([$message_id, $group_id]);
+    echo json_encode(['message' => sanitizeGroupMessage($message_stmt->fetch())]);
+    exit;
+}
+
 if ($action === 'fetch') {
     $peer = (int)($_GET['user'] ?? 0);
     $since = (int)($_GET['since'] ?? 0);

@@ -154,6 +154,13 @@ $translations = [
         'unblock_to_send_message' => 'あなたはこのユーザーをブロックしています。メッセージを送るにはブロックを解除してください。',
         'cannot_message_blocked_user' => 'このユーザーにはメッセージを送信できません。',
         'enter_message_or_photo' => 'メッセージを入力するか写真を添付してください。',
+        'group_create' => 'グループを作成',
+        'group_name' => 'グループ名',
+        'group_choose_friends' => '追加する友達を選択',
+        'group_name_error' => 'グループ名を入力してください（80文字以内）。',
+        'group_friend_required' => '追加できるのはブロックしていない友達のみです。友達を1人以上選択してください。',
+        'group_create_error' => 'グループを作成できませんでした。もう一度お試しください。',
+        'group_no_messages' => 'まだメッセージはありません。',
 
         // タイムライン / フィード (index.php)
         'like_button' => 'いいね！',
@@ -348,6 +355,13 @@ $translations = [
         'unblock_to_send_message' => 'You blocked this user. Unblock them to send messages.',
         'cannot_message_blocked_user' => 'You cannot send messages to this user.',
         'enter_message_or_photo' => 'Type something or attach a photo.',
+        'group_create' => 'Create a group',
+        'group_name' => 'Group name',
+        'group_choose_friends' => 'Choose friends to add',
+        'group_name_error' => 'Enter a group name with no more than 80 characters.',
+        'group_friend_required' => 'Select at least one friend. Only friends you have not blocked can be added.',
+        'group_create_error' => 'Could not create the group. Please try again.',
+        'group_no_messages' => 'No messages yet.',
 
         // Timeline / Feed (index.php)
         'like_button' => 'Like',

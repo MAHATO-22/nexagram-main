@@ -1,6 +1,7 @@
         const ME = window.NEXAGRAM_CONFIG.values[0];
         const PEER = window.NEXAGRAM_CONFIG.values[1];
         const STATE = window.NEXAGRAM_CONFIG.values[2];
+        const GROUP_ID = window.NEXAGRAM_CONFIG.values[11];
         const API = 'api_messages.php';
 
         const moreToggle = document.getElementById('moreToggle');
@@ -56,7 +57,116 @@
             });
         });
 
-        if (PEER > 0) {
+        if (GROUP_ID > 0) {
+            const chatBody = document.getElementById('chatBody');
+            const form = document.getElementById('msgForm');
+            const textInput = document.getElementById('msgText');
+            const panel = document.getElementById('emojiPanel');
+            let lastId = window.NEXAGRAM_CONFIG.values[12];
+            let sending = false;
+
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            function appendGroupMessage(message) {
+                if (document.querySelector('.bubble-row[data-id="' + message.id + '"]')) return;
+                const row = document.createElement('div');
+                const mine = message.sender_id === ME;
+                row.className = 'bubble-row ' + (mine ? 'mine' : 'theirs');
+                row.dataset.id = message.id;
+
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                if (!mine) {
+                    const sender = document.createElement('span');
+                    sender.className = 'group-sender';
+                    sender.textContent = message.sender_username;
+                    bubble.appendChild(sender);
+                }
+                if (message.message_text) {
+                    const text = document.createElement('span');
+                    text.textContent = message.message_text;
+                    bubble.appendChild(text);
+                }
+                if (message.image_path) {
+                    const image = document.createElement('img');
+                    image.src = message.image_path;
+                    image.className = 'msg-image';
+                    image.dataset.uiAction = 'open-message-lightbox';
+                    image.alt = '';
+                    bubble.appendChild(image);
+                }
+                const time = document.createElement('span');
+                time.className = 'time';
+                const date = new Date(message.created_at.replace(' ', 'T'));
+                time.textContent = date.toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) + ' ' +
+                    date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
+                bubble.appendChild(time);
+                row.appendChild(bubble);
+                chatBody.appendChild(row);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                lastId = Math.max(lastId, message.id);
+            }
+
+            setInterval(function () {
+                fetch(API + '?action=group_fetch&group=' + GROUP_ID + '&since=' + lastId)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error === 'group_not_found') {
+                            location.href = 'messages.php';
+                            return;
+                        }
+                        (data.messages || []).forEach(appendGroupMessage);
+                    })
+                    .catch(() => {});
+            }, 3000);
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                if (sending || !textInput.value.trim()) return;
+
+                const formData = new FormData();
+                formData.append('action', 'group_send');
+                formData.append('group', GROUP_ID);
+                formData.append('message_text', textInput.value.trim());
+                sending = true;
+                fetch(API + '?action=group_send', {method: 'POST', body: formData})
+                    .then(response => response.json())
+                    .then(data => {
+                        sending = false;
+                        if (data.error) {
+                            alert(sendErrorText(data.error));
+                            return;
+                        }
+                        appendGroupMessage(data.message);
+                        textInput.value = '';
+                        textInput.focus();
+                    })
+                    .catch(() => {
+                        sending = false;
+                        alert(sendErrorLabels[4]);
+                    });
+            });
+
+            textInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    form.requestSubmit();
+                }
+            });
+
+            const emojis = ['😀','😂','😅','😍','🥰','😘','😎','🤔','😢','😭','😡','🥺','😴','🤗','🤭','🙃','😇','🤩','😋','😜','👍','👎','👏','🙏','💪','🤝','❤️','💙','💚','🖤','🔥','✨','🎉','🎂','🌹','💐','☕','🍻','📸','💯'];
+            emojis.forEach(emoji => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = emoji;
+                button.addEventListener('click', () => {
+                    textInput.value += emoji;
+                    textInput.focus();
+                });
+                panel.appendChild(button);
+            });
+            document.getElementById('emojiBtn').addEventListener('click', () => panel.classList.toggle('open'));
+        } else if (PEER > 0) {
             const chatBody = document.getElementById('chatBody');
             const form = document.getElementById('msgForm');
             const textInput = document.getElementById('msgText');

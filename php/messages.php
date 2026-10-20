@@ -11,6 +11,65 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $me = (int)$_SESSION['user_id'];
+$group_error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_group'])) {
+    $submitted_group_name = $_POST['group_name'] ?? '';
+    $group_name = is_string($submitted_group_name) ? trim($submitted_group_name) : '';
+    $selected_friends = $_POST['group_friends'] ?? [];
+    if (!is_array($selected_friends)) {
+        $selected_friends = [];
+    }
+    $friend_ids = [];
+    foreach ($selected_friends as $selected_friend) {
+        if (is_int($selected_friend) || (is_string($selected_friend) && ctype_digit($selected_friend))) {
+            $friend_id = (int)$selected_friend;
+            if ($friend_id > 0 && $friend_id !== $me) {
+                $friend_ids[] = $friend_id;
+            }
+        }
+    }
+    $friend_ids = array_values(array_unique($friend_ids));
+
+    if ($group_name === '' || mb_strlen($group_name, 'UTF-8') > 80) {
+        $group_error = __('group_name_error');
+    } elseif (!$friend_ids) {
+        $group_error = __('group_friend_required');
+    } else {
+        $valid_friends = true;
+        foreach ($friend_ids as $friend_id) {
+            if (!isFriends($pdo, $me, $friend_id) || blockState($pdo, $me, $friend_id)) {
+                $valid_friends = false;
+                break;
+            }
+        }
+
+        if (!$valid_friends) {
+            $group_error = __('group_friend_required');
+        } else {
+            try {
+                $pdo->beginTransaction();
+                $create_group_stmt = $pdo->prepare('INSERT INTO group_chats (name, created_by) VALUES (?, ?)');
+                $create_group_stmt->execute([$group_name, $me]);
+                $new_group_id = (int)$pdo->lastInsertId();
+                $add_member_stmt = $pdo->prepare('INSERT INTO group_chat_members (group_id, user_id) VALUES (?, ?)');
+                $add_member_stmt->execute([$new_group_id, $me]);
+                foreach ($friend_ids as $friend_id) {
+                    $add_member_stmt->execute([$new_group_id, $friend_id]);
+                }
+                $pdo->commit();
+                header('Location: messages.php?group=' . $new_group_id);
+                exit;
+            } catch (PDOException $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                error_log('Group chat creation failed: ' . $e->getMessage());
+                $group_error = __('group_create_error');
+            }
+        }
+    }
+}
 
 function resolveImagePath($fileName) {
     if (empty($fileName)) return null;
@@ -102,6 +161,65 @@ usort($others, function ($a, $b) {
     return strcmp($a['user']['username'], $b['user']['username']);
 });
 
+$groups_stmt = $pdo->prepare("
+    SELECT gc.id, gc.name,
+        (SELECT gm.message_text FROM group_messages gm WHERE gm.group_id = gc.id ORDER BY gm.id DESC LIMIT 1) AS last_message,
+        (SELECT gm.id FROM group_messages gm WHERE gm.group_id = gc.id ORDER BY gm.id DESC LIMIT 1) AS last_message_id,
+        (SELECT COUNT(*) FROM group_messages gm
+         WHERE gm.group_id = gc.id AND gm.sender_id <> ? AND gm.id > gcm.last_read_message_id) AS unread
+    FROM group_chat_members gcm
+    JOIN group_chats gc ON gc.id = gcm.group_id
+    WHERE gcm.user_id = ?
+    ORDER BY COALESCE(last_message_id, 0) DESC, gc.id DESC
+");
+$groups_stmt->execute([$me, $me]);
+$groups = $groups_stmt->fetchAll();
+
+$group_id = (int)($_GET['group'] ?? 0);
+$active_group = null;
+$group_members = [];
+$group_messages = [];
+if ($group_id > 0) {
+    $active_group_stmt = $pdo->prepare("
+        SELECT gc.id, gc.name
+        FROM group_chats gc
+        JOIN group_chat_members gcm ON gcm.group_id = gc.id
+        WHERE gc.id = ? AND gcm.user_id = ?
+    ");
+    $active_group_stmt->execute([$group_id, $me]);
+    $active_group = $active_group_stmt->fetch();
+    if ($active_group) {
+        $members_stmt = $pdo->prepare("
+            SELECT u.id, u.username
+            FROM group_chat_members gcm
+            JOIN users u ON u.id = gcm.user_id
+            WHERE gcm.group_id = ?
+            ORDER BY u.username
+        ");
+        $members_stmt->execute([$group_id]);
+        $group_members = $members_stmt->fetchAll();
+
+        $group_messages_stmt = $pdo->prepare("
+            SELECT gm.*, u.username AS sender_username
+            FROM group_messages gm
+            JOIN users u ON u.id = gm.sender_id
+            WHERE gm.group_id = ?
+            ORDER BY gm.id ASC
+        ");
+        $group_messages_stmt->execute([$group_id]);
+        $group_messages = $group_messages_stmt->fetchAll();
+        $last_group_message_id = $group_messages ? (int)end($group_messages)['id'] : 0;
+        $mark_group_read_stmt = $pdo->prepare("
+            UPDATE group_chat_members
+            SET last_read_message_id = GREATEST(last_read_message_id, ?)
+            WHERE group_id = ? AND user_id = ?
+        ");
+        $mark_group_read_stmt->execute([$last_group_message_id, $group_id, $me]);
+    } else {
+        $group_id = 0;
+    }
+}
+
 function previewText($m) {
     if (!$m) return '';
     if (!empty($m['message_text'])) return $m['message_text'];
@@ -165,7 +283,43 @@ function previewText($m) {
 
             <section class="conv-panel">
                 <div class="panel-title"><?php echo htmlspecialchars(__('nav_messages'), ENT_QUOTES, 'UTF-8'); ?></div>
+                <details class="group-create" <?php echo $group_error !== '' ? 'open' : ''; ?>>
+                    <summary><i class="fa-solid fa-users"></i> <?php echo htmlspecialchars(__('group_create'), ENT_QUOTES, 'UTF-8'); ?></summary>
+                    <?php if ($group_error !== ''): ?>
+                        <p class="group-error" role="alert"><?php echo htmlspecialchars($group_error, ENT_QUOTES, 'UTF-8'); ?></p>
+                    <?php endif; ?>
+                    <form method="post" action="messages.php">
+                        <input type="hidden" name="create_group" value="1">
+                        <label for="group-name"><?php echo htmlspecialchars(__('group_name'), ENT_QUOTES, 'UTF-8'); ?></label>
+                        <input id="group-name" type="text" name="group_name" maxlength="80" required>
+                        <fieldset>
+                            <legend><?php echo htmlspecialchars(__('group_choose_friends'), ENT_QUOTES, 'UTF-8'); ?></legend>
+                            <?php foreach ($all_users as $friend): ?>
+                                <?php if (!isset($blocked_peers[$friend['id']])): ?>
+                                    <label class="group-friend-option">
+                                        <input type="checkbox" name="group_friends[]" value="<?php echo (int)$friend['id']; ?>">
+                                        <?php echo htmlspecialchars($friend['username'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </label>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </fieldset>
+                        <button class="group-create-button" type="submit"><?php echo htmlspecialchars(__('group_create'), ENT_QUOTES, 'UTF-8'); ?></button>
+                    </form>
+                </details>
                 <div class="conv-list">
+                    <?php foreach ($groups as $group): ?>
+                        <a href="messages.php?group=<?php echo (int)$group['id']; ?>"
+                           class="conv-item <?php echo ($group_id === (int)$group['id']) ? 'active' : ''; ?>">
+                            <div class="group-avatar"><i class="fa-solid fa-users"></i></div>
+                            <div class="conv-body">
+                                <div class="conv-name"><?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="conv-preview"><?php echo htmlspecialchars($group['last_message'] ?: __('group_no_messages'), ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+                            <?php if ((int)$group['unread'] > 0): ?>
+                                <span class="conv-unread"><?php echo (int)$group['unread']; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    <?php endforeach; ?>
                     <?php foreach ($others as $row): $u = $row['user']; ?>
                         <a href="messages.php?user=<?php echo $u['id']; ?>"
                            class="conv-item <?php echo ($peer_id === (int)$u['id']) ? 'active' : ''; ?>">
@@ -188,7 +342,42 @@ function previewText($m) {
             </section>
 
             <section class="chat-panel">
-                <?php if ($peer): ?>
+                <?php if ($active_group): ?>
+                    <div class="chat-header">
+                        <div class="group-avatar"><i class="fa-solid fa-users"></i></div>
+                        <div class="group-chat-heading">
+                            <span class="name"><?php echo htmlspecialchars($active_group['name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                            <span class="group-member-list">
+                                <?php echo htmlspecialchars(implode(', ', array_column($group_members, 'username')), ENT_QUOTES, 'UTF-8'); ?>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="chat-body" id="chatBody">
+                        <?php foreach ($group_messages as $m): ?>
+                            <?php $mine = ((int)$m['sender_id'] === $me); ?>
+                            <div class="bubble-row <?php echo $mine ? 'mine' : 'theirs'; ?>" data-id="<?php echo (int)$m['id']; ?>">
+                                <div class="bubble">
+                                    <?php if (!$mine): ?>
+                                        <span class="group-sender"><?php echo htmlspecialchars($m['sender_username'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($m['message_text'])): ?>
+                                        <?php echo nl2br(htmlspecialchars($m['message_text'], ENT_QUOTES, 'UTF-8')); ?>
+                                    <?php endif; ?>
+                                    <?php if (!empty($m['image_path'])): ?>
+                                        <img src="<?php echo htmlspecialchars(resolveImagePath($m['image_path']), ENT_QUOTES, 'UTF-8'); ?>" class="msg-image" data-ui-action="open-message-lightbox" alt="">
+                                    <?php endif; ?>
+                                    <span class="time"><?php echo date('M d, H:i', strtotime($m['created_at'])); ?></span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="emoji-panel" id="emojiPanel"></div>
+                    <form class="chat-input" id="msgForm">
+                        <button type="button" class="icon-btn" id="emojiBtn" title="<?php echo htmlspecialchars(__('emoji'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa-solid fa-face-smile"></i></button>
+                        <input type="text" id="msgText" name="message_text" placeholder="<?php echo htmlspecialchars(__('message_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
+                        <button type="submit" class="icon-btn send-btn" title="<?php echo htmlspecialchars(__('send'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa-solid fa-paper-plane"></i></button>
+                    </form>
+                <?php elseif ($peer): ?>
                     <div class="chat-header">
                         <?php $pav = resolveImagePath($peer['profile_image']); ?>
                         <a class="chat-profile-link" href="profile.php?id=<?php echo (int)$peer['id']; ?>" aria-label="<?php echo htmlspecialchars(__('view_profile'), ENT_QUOTES, 'UTF-8'); ?>: <?php echo htmlspecialchars($peer['username'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -274,7 +463,7 @@ function previewText($m) {
     <div class="lightbox" id="lightbox" data-ui-action="close-message-lightbox"><img id="lightboxImg" src=""></div>
 
     <script src="../js/badge.js"></script>
-    <div id="page-config" hidden data-config="<?php echo htmlspecialchars(json_encode(['values' => [$me, (int)$peer_id, $state, $chat_messages ? (int)end($chat_messages)['id'] : 0, __('dark_mode'), __('light_mode'), __('message_request_reply_or_block'), __('unblock_to_send_message'), __('cannot_message_blocked_user'), __('enter_message_or_photo'), __('message_send_failed')]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>"></div>
+    <div id="page-config" hidden data-config="<?php echo htmlspecialchars(json_encode(['values' => [$me, (int)$peer_id, $state, $chat_messages ? (int)end($chat_messages)['id'] : 0, __('dark_mode'), __('light_mode'), __('message_request_reply_or_block'), __('unblock_to_send_message'), __('cannot_message_blocked_user'), __('enter_message_or_photo'), __('message_send_failed'), (int)$group_id, $group_messages ? (int)end($group_messages)['id'] : 0]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>"></div>
     <script src="../js/page-config.js"></script>
     <script src="../js/messages.js"></script>
     <script src="../js/actions.js"></script>
