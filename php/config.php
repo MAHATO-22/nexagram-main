@@ -1,11 +1,7 @@
 <?php
 // config.php - Nexagram Database Connection
 
-$host = 'localhost';
-$db   = 'nexa'; // Database နာမည်ကို nexa ပြောင်းလိုက်ပါပြီ
-$user = 'root';     // XAMPP default username
-$pass = '';         // XAMPP default password
-$charset = 'utf8mb4';
+require_once 'env.php';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [
