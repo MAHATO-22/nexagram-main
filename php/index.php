@@ -119,7 +119,12 @@ $encoded_data = [];
         
 ?>
 <!DOCTYPE html>
-<html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>">
+<html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-unavailable="<?php echo htmlspecialchars(__('translation_unavailable'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-failed="<?php echo htmlspecialchars(__('translation_failed'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-loading="<?php echo htmlspecialchars(__('translation_loading'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-too-long="<?php echo htmlspecialchars(__('translation_too_long'), ENT_QUOTES, 'UTF-8'); ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -128,6 +133,7 @@ $encoded_data = [];
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../js/theme-init.js"></script>
     <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/translation.css">
     <link rel="stylesheet" href="../css/utilities.css">
     <link rel="stylesheet" href="../css/more-menu.css">
     <link rel="stylesheet" href="../css/suggestions-widget.css">
@@ -186,6 +192,13 @@ $encoded_data = [];
 
     <main class="main-content">
         <div class="feed-container">
+            <div class="auto-translation-control">
+                <button type="button" class="auto-translate-toggle" data-auto-translate
+                        data-enabled-label="<?php echo htmlspecialchars(__('auto_translate_on'), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-disabled-label="<?php echo htmlspecialchars(__('auto_translate_off'), ENT_QUOTES, 'UTF-8'); ?>"
+                        aria-pressed="false"><?php echo htmlspecialchars(__('auto_translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                <span class="auto-translate-status" data-auto-translate-status role="status"></span>
+            </div>
             <section class="suggestions-panel" aria-labelledby="suggestions-title">
                 <div class="suggestions-heading">
                     <div>
@@ -285,7 +298,13 @@ $encoded_data = [];
 
                     <?php if (!empty($post['caption'])): ?>
                         <div class="post-info">
-                            <div class="post-caption"><?php echo htmlspecialchars($post['caption']); ?></div>
+                            <div data-translatable>
+                                <div class="post-caption" data-translation-source><?php echo htmlspecialchars($post['caption'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="translation-tools">
+                                    <button type="button" class="translate-button" data-translate-button data-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                                    <span class="translation-result" data-translation-result hidden></span>
+                                </div>
+                            </div>
                         </div>
                     <?php endif; ?>
 
@@ -387,6 +406,7 @@ $encoded_data = [];
     <div id="page-config" hidden data-config="<?php echo htmlspecialchars(json_encode(['values' => [__('btn_reply'), __('no_comments'), __('comments_label'), __('dark_mode'), __('light_mode'), $current_username, $current_user_avatar, $encoded_data]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>"></div>
     <script src="../js/page-config.js"></script>
     <script src="../js/index.js"></script>
+    <script src="../js/translation.js"></script>
     <script src="../js/actions.js"></script>
     <script src="../js/badge.js"></script>
     <?php include __DIR__ . '/suggestions_widget.php'; ?>

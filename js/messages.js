@@ -13,6 +13,29 @@
         const lightModeText = window.NEXAGRAM_CONFIG.values[5];
         const sendErrorLabels = window.NEXAGRAM_CONFIG.values.slice(6);
 
+        function appendTranslationTools(container, sourceText) {
+            const translatable = document.createElement('div');
+            translatable.dataset.translatable = '';
+            const source = document.createElement('div');
+            source.dataset.translationSource = '';
+            source.textContent = sourceText;
+            const tools = document.createElement('div');
+            tools.className = 'translation-tools';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'translate-button';
+            button.dataset.translateButton = '';
+            button.dataset.label = document.documentElement.dataset.translationLabel;
+            button.textContent = button.dataset.label;
+            const result = document.createElement('span');
+            result.className = 'translation-result';
+            result.dataset.translationResult = '';
+            result.hidden = true;
+            tools.append(button, result);
+            translatable.append(source, tools);
+            container.appendChild(translatable);
+        }
+
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
@@ -83,9 +106,7 @@
                     bubble.appendChild(sender);
                 }
                 if (message.message_text) {
-                    const text = document.createElement('span');
-                    text.textContent = message.message_text;
-                    bubble.appendChild(text);
+                    appendTranslationTools(bubble, message.message_text);
                 }
                 if (message.image_path) {
                     const image = document.createElement('img');
@@ -188,11 +209,22 @@
                 const row = document.createElement('div');
                 row.className = 'bubble-row ' + (mine ? 'mine' : 'theirs');
                 row.dataset.id = m.id;
-                let inner = '';
-                if (m.message_text) inner += m.message_text.split('\n').map(t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;')).join('<br>');
-                if (m.image_path) inner += '<img src="' + m.image_path + '" class="msg-image" data-ui-action="open-message-lightbox">';
-                inner += '<span class="time">' + timeLabel(m.created_at) + '</span>';
-                row.innerHTML = '<div class="bubble">' + inner + '</div>';
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                if (m.message_text) appendTranslationTools(bubble, m.message_text);
+                if (m.image_path) {
+                    const image = document.createElement('img');
+                    image.src = m.image_path;
+                    image.className = 'msg-image';
+                    image.dataset.uiAction = 'open-message-lightbox';
+                    image.alt = '';
+                    bubble.appendChild(image);
+                }
+                const time = document.createElement('span');
+                time.className = 'time';
+                time.textContent = timeLabel(m.created_at);
+                bubble.appendChild(time);
+                row.appendChild(bubble);
                 chatBody.appendChild(row);
                 chatBody.scrollTop = chatBody.scrollHeight;
                 lastId = Math.max(lastId, m.id);

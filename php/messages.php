@@ -227,7 +227,12 @@ function previewText($m) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>">
+<html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-unavailable="<?php echo htmlspecialchars(__('translation_unavailable'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-failed="<?php echo htmlspecialchars(__('translation_failed'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-loading="<?php echo htmlspecialchars(__('translation_loading'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-too-long="<?php echo htmlspecialchars(__('translation_too_long'), ENT_QUOTES, 'UTF-8'); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -235,6 +240,7 @@ function previewText($m) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../js/theme-init.js"></script>
     <link rel="stylesheet" href="../css/messages.css">
+    <link rel="stylesheet" href="../css/translation.css">
     <link rel="stylesheet" href="../css/utilities.css">
     <link rel="stylesheet" href="../css/more-menu.css">
 </head>
@@ -283,6 +289,13 @@ function previewText($m) {
 
             <section class="conv-panel">
                 <div class="panel-title"><?php echo htmlspecialchars(__('nav_messages'), ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="auto-translation-control">
+                    <button type="button" class="auto-translate-toggle" data-auto-translate
+                            data-enabled-label="<?php echo htmlspecialchars(__('auto_translate_on'), ENT_QUOTES, 'UTF-8'); ?>"
+                            data-disabled-label="<?php echo htmlspecialchars(__('auto_translate_off'), ENT_QUOTES, 'UTF-8'); ?>"
+                            aria-pressed="false"><?php echo htmlspecialchars(__('auto_translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                    <span class="auto-translate-status" data-auto-translate-status role="status"></span>
+                </div>
                 <details class="group-create" <?php echo $group_error !== '' ? 'open' : ''; ?>>
                     <summary><i class="fa-solid fa-users"></i> <?php echo htmlspecialchars(__('group_create'), ENT_QUOTES, 'UTF-8'); ?></summary>
                     <?php if ($group_error !== ''): ?>
@@ -361,7 +374,13 @@ function previewText($m) {
                                         <span class="group-sender"><?php echo htmlspecialchars($m['sender_username'], ENT_QUOTES, 'UTF-8'); ?></span>
                                     <?php endif; ?>
                                     <?php if (!empty($m['message_text'])): ?>
-                                        <?php echo nl2br(htmlspecialchars($m['message_text'], ENT_QUOTES, 'UTF-8')); ?>
+                                        <div data-translatable>
+                                            <div data-translation-source><?php echo nl2br(htmlspecialchars($m['message_text'], ENT_QUOTES, 'UTF-8')); ?></div>
+                                            <div class="translation-tools">
+                                                <button type="button" class="translate-button" data-translate-button data-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                                                <span class="translation-result" data-translation-result hidden></span>
+                                            </div>
+                                        </div>
                                     <?php endif; ?>
                                     <?php if (!empty($m['image_path'])): ?>
                                         <img src="<?php echo htmlspecialchars(resolveImagePath($m['image_path']), ENT_QUOTES, 'UTF-8'); ?>" class="msg-image" data-ui-action="open-message-lightbox" alt="">
@@ -427,7 +446,13 @@ function previewText($m) {
                             <div class="bubble-row <?php echo $mine ? 'mine' : 'theirs'; ?>" data-id="<?php echo (int)$m['id']; ?>">
                                 <div class="bubble">
                                     <?php if (!empty($m['message_text'])): ?>
-                                        <?php echo nl2br(htmlspecialchars($m['message_text'])); ?>
+                                        <div data-translatable>
+                                            <div data-translation-source><?php echo nl2br(htmlspecialchars($m['message_text'], ENT_QUOTES, 'UTF-8')); ?></div>
+                                            <div class="translation-tools">
+                                                <button type="button" class="translate-button" data-translate-button data-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                                                <span class="translation-result" data-translation-result hidden></span>
+                                            </div>
+                                        </div>
                                     <?php endif; ?>
                                     <?php if (!empty($m['image_path'])): ?>
                                         <img src="<?php echo htmlspecialchars(resolveImagePath($m['image_path'])); ?>" class="msg-image" data-ui-action="open-message-lightbox">
@@ -466,6 +491,7 @@ function previewText($m) {
     <div id="page-config" hidden data-config="<?php echo htmlspecialchars(json_encode(['values' => [$me, (int)$peer_id, $state, $chat_messages ? (int)end($chat_messages)['id'] : 0, __('dark_mode'), __('light_mode'), __('message_request_reply_or_block'), __('unblock_to_send_message'), __('cannot_message_blocked_user'), __('enter_message_or_photo'), __('message_send_failed'), (int)$group_id, $group_messages ? (int)end($group_messages)['id'] : 0]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>"></div>
     <script src="../js/page-config.js"></script>
     <script src="../js/messages.js"></script>
+    <script src="../js/translation.js"></script>
     <script src="../js/actions.js"></script>
 </body>
 </html>
