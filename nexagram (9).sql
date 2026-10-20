@@ -386,7 +386,8 @@ CREATE TABLE `users` (
   `class_name` varchar(100) DEFAULT NULL,
   `school_name` varchar(150) DEFAULT NULL,
   `language_code` varchar(20) NOT NULL DEFAULT 'ja-JP',
-  `default_visibility` enum('public','followers','friends','only_me') NOT NULL DEFAULT 'public'
+  `default_visibility` enum('public','followers','friends','only_me') NOT NULL DEFAULT 'public',
+  `notifications_enabled` tinyint(1) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --

@@ -10,8 +10,18 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = (int)$_SESSION['user_id'];
 $settings_error = '';
+$settings_notice = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_notifications'])) {
+    $notifications_enabled = $_POST['notifications_enabled'] ?? '0';
+    if (!is_string($notifications_enabled) || !in_array($notifications_enabled, ['0', '1'], true)) {
+        $settings_error = __('notification_save_error');
+    } else {
+        $notification_stmt = $pdo->prepare('UPDATE users SET notifications_enabled = ? WHERE id = ?');
+        $notification_stmt->execute([(int)$notifications_enabled, $user_id]);
+        $settings_notice = __('notification_saved');
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang'])) {
     $requested_language = $_POST['lang'];
     if (!is_string($requested_language) || !isset($available_languages[$requested_language])) {
         $settings_error = __('language_save_error');
@@ -23,6 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang'])) {
         exit;
     }
 }
+
+$notification_setting_stmt = $pdo->prepare('SELECT notifications_enabled FROM users WHERE id = ?');
+$notification_setting_stmt->execute([$user_id]);
+$notifications_enabled = (bool)$notification_setting_stmt->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>">
@@ -41,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang'])) {
         <h1><?php echo htmlspecialchars(__('nav_settings'), ENT_QUOTES, 'UTF-8'); ?></h1>
         <?php if ($settings_error !== ''): ?>
             <p class="setting-notice setting-error" role="alert"><?php echo htmlspecialchars($settings_error, ENT_QUOTES, 'UTF-8'); ?></p>
+        <?php elseif ($settings_notice !== ''): ?>
+            <p class="setting-notice setting-success" role="status"><?php echo htmlspecialchars($settings_notice, ENT_QUOTES, 'UTF-8'); ?></p>
         <?php endif; ?>
         <section class="setting-section" aria-labelledby="language-heading">
             <div class="setting-icon"><i class="fa-solid fa-language"></i></div>
@@ -59,16 +75,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang'])) {
                 </form>
             </div>
         </section>
-        <section class="setting-section" aria-labelledby="theme-heading">
-            <div class="setting-icon"><i class="fa-solid fa-circle-half-stroke"></i></div>
+        <section class="setting-section" aria-labelledby="notification-heading">
+            <div class="setting-icon"><i class="fa-solid fa-bell"></i></div>
             <div class="setting-content">
-                <h2 id="theme-heading"><?php echo htmlspecialchars(__('theme_settings'), ENT_QUOTES, 'UTF-8'); ?></h2>
-                <p><?php echo htmlspecialchars(__('theme_description'), ENT_QUOTES, 'UTF-8'); ?></p>
-                <label for="theme-select"><?php echo htmlspecialchars(__('theme'), ENT_QUOTES, 'UTF-8'); ?></label>
-                <select id="theme-select">
-                    <option value="light"><?php echo htmlspecialchars(__('light_mode'), ENT_QUOTES, 'UTF-8'); ?></option>
-                    <option value="dark"><?php echo htmlspecialchars(__('dark_mode'), ENT_QUOTES, 'UTF-8'); ?></option>
-                </select>
+                <h2 id="notification-heading"><?php echo htmlspecialchars(__('notification_settings'), ENT_QUOTES, 'UTF-8'); ?></h2>
+                <p><?php echo htmlspecialchars(__('notification_settings_description'), ENT_QUOTES, 'UTF-8'); ?></p>
+                <form method="post" action="settings.php">
+                    <input type="hidden" name="save_notifications" value="1">
+                    <label>
+                        <input type="checkbox" name="notifications_enabled" value="1" <?php echo $notifications_enabled ? 'checked' : ''; ?>>
+                        <?php echo htmlspecialchars(__('notifications_enabled'), ENT_QUOTES, 'UTF-8'); ?>
+                    </label>
+                    <button class="setting-save-button" type="submit"><?php echo htmlspecialchars(__('save_settings'), ENT_QUOTES, 'UTF-8'); ?></button>
+                </form>
             </div>
         </section>
     </main>
