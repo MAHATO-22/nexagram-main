@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $current_user_id = $_SESSION['user_id'];
 $current_username = $_SESSION['username'] ?? 'User';
+$allowed_reactions = ['❤️', '👍', '👎', '😂', '🤣', '😮', '😢', '😭', '😡', '😍', '🥰', '🤩', '😎', '🤔', '🥳', '🙏', '🙌', '👏', '🔥', '🎉', '💯', '💪', '✨', '👀'];
 
 // Get current user's profile image
 $user_stmt = $pdo->prepare("SELECT profile_image, student_id, user_code, department, class_name, school_name FROM users WHERE id = ?");
@@ -324,12 +325,13 @@ $encoded_data = [];
 
                     <div class="action-bar">
                         <div class="like-action-wrap">
-                            <button type="button" class="action-button like-btn <?php echo $post['is_liked'] ? 'liked' : ''; ?>" data-post-id="<?php echo (int)$post['id']; ?>" data-reaction="<?php echo htmlspecialchars($post['user_reaction'] ?: '❤️', ENT_QUOTES, 'UTF-8'); ?>" aria-expanded="false" aria-controls="reactionPicker<?php echo (int)$post['id']; ?>" title="Long press to choose a reaction">
-                                <span class="like-reaction action-icon"><?php if ($post['is_liked']): ?><?php echo htmlspecialchars($post['user_reaction'] ?: '❤️', ENT_QUOTES, 'UTF-8'); ?><?php else: ?><i class="fa-regular fa-heart"></i><?php endif; ?></span>
+                            <?php $display_reaction = in_array($post['user_reaction'], $allowed_reactions, true) ? $post['user_reaction'] : '❤️'; ?>
+                            <button type="button" class="action-button like-btn <?php echo $post['is_liked'] ? 'liked' : ''; ?>" data-post-id="<?php echo (int)$post['id']; ?>" data-reaction="<?php echo htmlspecialchars($display_reaction, ENT_QUOTES, 'UTF-8'); ?>" aria-expanded="false" aria-controls="reactionPicker<?php echo (int)$post['id']; ?>" title="Long press to choose a reaction">
+                                <span class="like-reaction action-icon"><?php if ($post['is_liked']): ?><?php echo htmlspecialchars($display_reaction, ENT_QUOTES, 'UTF-8'); ?><?php else: ?><i class="fa-regular fa-heart"></i><?php endif; ?></span>
                                 <span><?php echo __('like_button'); ?></span>
                             </button>
                             <div class="reaction-picker" id="reactionPicker<?php echo (int)$post['id']; ?>" role="group" aria-label="Post reactions">
-                                <?php foreach (['❤️', '👍', '👎', '😂', '🤣', '😮', '😢', '😭', '😡', '😍', '🥰', '🤩', '😎', '🤔', '🥳', '🙏', '🙌', '👏', '🔥', '🎉', '💯', '💪', '✨', '👀'] as $reaction): ?>
+                                <?php foreach ($allowed_reactions as $reaction): ?>
                                     <button type="button" class="reaction-option" data-post-id="<?php echo (int)$post['id']; ?>" data-reaction="<?php echo htmlspecialchars($reaction, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($reaction, ENT_QUOTES, 'UTF-8'); ?>"><?php echo $reaction; ?></button>
                                 <?php endforeach; ?>
                             </div>

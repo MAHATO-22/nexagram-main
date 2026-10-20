@@ -20,10 +20,20 @@ $mode = $_GET['mode'] ?? 'toggle';
 $reaction = $_GET['reaction'] ?? '❤️';
 $allowed_reactions = ['❤️', '👍', '👎', '😂', '🤣', '😮', '😢', '😭', '😡', '😍', '🥰', '🤩', '😎', '🤔', '🥳', '🙏', '🙌', '👏', '🔥', '🎉', '💯', '💪', '✨', '👀'];
 
-if (!in_array($mode, ['toggle', 'react'], true) || !in_array($reaction, $allowed_reactions, true)) {
+if (!is_string($mode) || !in_array($mode, ['toggle', 'react'], true)) {
+    ob_end_clean();
+    echo json_encode(['success' => false, 'message' => 'Invalid like action.']);
+    exit;
+}
+
+if ($mode === 'react' && (!is_string($reaction) || !in_array($reaction, $allowed_reactions, true))) {
     ob_end_clean();
     echo json_encode(['success' => false, 'message' => 'Invalid reaction.']);
     exit;
+}
+
+if ($mode === 'toggle') {
+    $reaction = '❤️';
 }
 
 try {
