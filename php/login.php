@@ -1,5 +1,5 @@
 <?php
-// login.php - Nexagram Modern Glassmorphism Login Page
+// login.php - Nexagram School Email Only Login
 session_start();
 require_once 'config.php';
 require_once 'lang.php';
@@ -13,22 +13,33 @@ if (isset($_SESSION['user_id'])) {
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if (!empty($username) && !empty($password)) {
+    // Allowed domain configuration
+    $allowed_domain = 'yse-c.net';
+    $user_email_domain = strtolower(substr(strrchr($email, "@"), 1));
+
+    if (empty($email) || empty($password)) {
+        $error_message = __('required_fields');
+    } elseif ($user_email_domain !== $allowed_domain) {
+        $error_message = "Access restricted: Please enter an official @" . $allowed_domain . " email address.";
+    } else {
         try {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
-            $stmt->execute([$username, $username]);
+            // Query ONLY by email address
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
+                
                 $preferred_language = $user['language_code'] ?? null;
                 if (is_string($preferred_language) && isset($available_languages[$preferred_language])) {
                     $_SESSION['lang'] = $preferred_language;
                 }
+                
                 header("Location: index.php");
                 exit;
             } else {
@@ -37,8 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (\PDOException $e) {
             $error_message = __('database_error');
         }
-    } else {
-        $error_message = __('required_fields');
     }
 }
 ?>
@@ -90,13 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form action="login.php" method="POST">
+            <!-- Email Input (School Email Only) -->
             <div class="form-group">
                 <div class="input-wrapper">
-                    <input type="text" name="username" class="form-input" placeholder="<?php echo htmlspecialchars(__('login_username_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="username">
-                    <i class="fa-regular fa-user input-icon"></i>
+                    <input type="email" name="email" class="form-input" placeholder="student@yse-c.net" pattern=".+@yse-c\.net$" title="Please enter your official @yse-c.net email." required autocomplete="email">
+                    <i class="fa-regular fa-envelope input-icon"></i>
                 </div>
             </div>
 
+            <!-- Password Input -->
             <div class="form-group">
                 <div class="input-wrapper">
                     <input type="password" name="password" id="passwordInput" class="form-input" placeholder="<?php echo htmlspecialchars(__('login_password_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="current-password">

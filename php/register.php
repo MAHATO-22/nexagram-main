@@ -17,8 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $class_name = trim($_POST['class_name'] ?? '');
     $school_name = trim($_POST['school_name'] ?? '');
 
+    // Domain security check configuration
+    $allowed_domain = 'yse-c.net';
+    $email_domain = strtolower(substr(strrchr($email, "@"), 1));
+
     if (empty($user_code) || empty($username) || empty($email) || empty($password) || empty($department)) {
         $error = __('required_fields');
+    } elseif ($email_domain !== $allowed_domain) {
+        $error = "Registration is restricted to official @" . $allowed_domain . " email addresses only.";
     } else {
         try {
             // Check if email or username already exists
@@ -103,9 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="text" name="username" class="form-input" placeholder="<?php echo htmlspecialchars(__('ph_username'), ENT_QUOTES, 'UTF-8'); ?>" required>
             </div>
 
-            <!-- Email -->
+            <!-- Email (Restricted to @yse-c.net) -->
             <div class="form-group">
-                <input type="email" name="email" class="form-input" placeholder="<?php echo htmlspecialchars(__('ph_email'), ENT_QUOTES, 'UTF-8'); ?>" required>
+                <input type="email" name="email" class="form-input" placeholder="student@yse-c.net" pattern=".+@yse-c\.net$" title="Please use your official @yse-c.net email address." required>
             </div>
 
             <!-- Password -->
