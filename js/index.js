@@ -349,9 +349,13 @@
             item.innerHTML = `
                 ${avatarHTML}
                 <div class="comment-content-wrapper">
-                    <div class="panel-comment-bubble">
+                    <div class="panel-comment-bubble" data-translatable>
                         <div class="panel-comment-user">${username}</div>
-                        <div class="panel-comment-text">${escapeHtml(comment.text)}</div>
+                        <div class="panel-comment-text" data-translation-source>${escapeHtml(comment.text)}</div>
+                        <div class="translation-tools">
+                            <button type="button" class="translate-button" data-translate-button data-label="${escapeHtml(document.documentElement.dataset.translationLabel)}">${escapeHtml(document.documentElement.dataset.translationLabel)}</button>
+                            <span class="translation-result" data-translation-result hidden></span>
+                        </div>
                     </div>
                     <div class="comment-actions">
                         <span class="comment-action-btn" data-ui-action="reply-to-comment" data-comment-id="${comment.id}" data-comment-username="${username}">${txtReply}</span>

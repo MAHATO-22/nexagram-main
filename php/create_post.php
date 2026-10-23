@@ -92,7 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>">
+<html lang="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars($text_direction, ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-unavailable="<?php echo htmlspecialchars(__('translation_unavailable'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-failed="<?php echo htmlspecialchars(__('translation_failed'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-loading="<?php echo htmlspecialchars(__('translation_loading'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-too-long="<?php echo htmlspecialchars(__('translation_too_long'), ENT_QUOTES, 'UTF-8'); ?>"
+      data-translation-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -101,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../js/theme-init.js"></script>
     <link rel="stylesheet" href="../css/create_post.css">
+    <link rel="stylesheet" href="../css/translation.css">
     <link rel="stylesheet" href="../css/utilities.css">
     <link rel="stylesheet" href="../css/more-menu.css">
     <link rel="stylesheet" href="../css/suggestions-widget.css">
@@ -185,6 +191,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span id="charCounter">0 / 500</span>
                     </div>
                     <textarea name="caption" id="captionInput" class="caption-textarea" maxlength="500" placeholder="<?php echo __('write_caption_placeholder'); ?>"></textarea>
+                    <div class="translation-tools" data-translation-input="captionInput">
+                        <button type="button" class="translate-button" data-translate-button data-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                        <span class="translation-result" data-translation-result hidden></span>
+                        <button type="button" class="translation-use" data-translation-use hidden><?php echo htmlspecialchars(__('use_translation'), ENT_QUOTES, 'UTF-8'); ?></button>
+                    </div>
                 </div>
 
                 <div class="visibility-field" style="margin-top: 18px;">
@@ -212,6 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div id="page-config" hidden data-config="<?php echo htmlspecialchars(json_encode(['values' => [__('add_more_photos')]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>"></div>
     <script src="../js/page-config.js"></script>
     <script src="../js/create_post.js"></script>
+    <script src="../js/translation.js"></script>
     <script src="../js/badge.js"></script>
     <?php include __DIR__ . '/suggestions_widget.php'; ?>
 </body>
