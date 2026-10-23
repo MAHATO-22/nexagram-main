@@ -35,7 +35,6 @@ require_once 'suggestion_helper.php';
 $suggestions = getPeopleSuggestions($pdo, (int)$current_user_id);
 
 // Fetch Posts with Public, Follower-Only, and Friend-Only Privacy Rules
-// Fetch Posts with Public, Follower-Only, and Friend-Only Privacy Rules
 try {
     $stmt = $pdo->prepare("
         SELECT posts.*, users.username, users.profile_image,
@@ -91,30 +90,30 @@ try {
 }
 
 $encoded_data = [];
-        foreach ($posts as $p) {
-            $c_stmt = $pdo->prepare("SELECT comments.*, users.username, users.profile_image,
-                                     (SELECT COUNT(*) FROM comment_likes WHERE comment_likes.comment_id = comments.id) as like_count,
-                                     (SELECT COUNT(*) FROM comment_likes WHERE comment_likes.comment_id = comments.id AND comment_likes.user_id = ?) as is_liked
-                                     FROM comments 
-                                     JOIN users ON comments.user_id = users.id 
-                                     WHERE post_id = ? 
-                                     ORDER BY comments.id ASC");
-            $c_stmt->execute([$current_user_id, $p['id']]);
-            $comments = $c_stmt->fetchAll();
+foreach ($posts as $p) {
+    $c_stmt = $pdo->prepare("SELECT comments.*, users.username, users.profile_image,
+                             (SELECT COUNT(*) FROM comment_likes WHERE comment_likes.comment_id = comments.id) as like_count,
+                             (SELECT COUNT(*) FROM comment_likes WHERE comment_likes.comment_id = comments.id AND comment_likes.user_id = ?) as is_liked
+                             FROM comments 
+                             JOIN users ON comments.user_id = users.id 
+                             WHERE post_id = ? 
+                             ORDER BY comments.id ASC");
+    $c_stmt->execute([$current_user_id, $p['id']]);
+    $comments = $c_stmt->fetchAll();
 
-            $encoded_data[$p['id']] = [];
-            foreach ($comments as $c) {
-                $encoded_data[$p['id']][] = [
-                    'id' => (int)$c['id'],
-                    'parent_id' => $c['parent_id'] ? (int)$c['parent_id'] : null,
-                    'username' => htmlspecialchars($c['username']),
-                    'avatar' => resolveImagePath($c['profile_image'] ?? null),
-                    'text' => htmlspecialchars($c['comment_text']),
-                    'like_count' => (int)$c['like_count'],
-                    'is_liked' => (bool)$c['is_liked']
-                ];
-            }
-        }
+    $encoded_data[$p['id']] = [];
+    foreach ($comments as $c) {
+        $encoded_data[$p['id']][] = [
+            'id' => (int)$c['id'],
+            'parent_id' => $c['parent_id'] ? (int)$c['parent_id'] : null,
+            'username' => htmlspecialchars($c['username']),
+            'avatar' => resolveImagePath($c['profile_image'] ?? null),
+            'text' => htmlspecialchars($c['comment_text']),
+            'like_count' => (int)$c['like_count'],
+            'is_liked' => (bool)$c['is_liked']
+        ];
+    }
+}
         
 ?>
 <!DOCTYPE html>
@@ -130,6 +129,24 @@ $encoded_data = [];
     <link rel="stylesheet" href="../css/utilities.css">
     <link rel="stylesheet" href="../css/more-menu.css">
     <link rel="stylesheet" href="../css/suggestions-widget.css">
+    <style>
+        .post-card.highlighted-post {
+            outline: 2px solid #3b82f6;
+            transition: outline 0.5s ease;
+        }
+        .post-visibility-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-sub, #94a3b8);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+    </style>
 </head>
 
 <body>
@@ -233,6 +250,7 @@ $encoded_data = [];
             <?php foreach ($posts as $post): ?>
                 <?php
                 $user_avatar = resolveImagePath($post['profile_image'] ?? null);
+                $visibility = $post['visibility'] ?? 'public';
 
                 // Fetch media from post_media table
                 $media_items = [];
@@ -251,9 +269,9 @@ $encoded_data = [];
                     // Fallback if table doesn't exist yet
                 }
 
-                // Fallback to legacy posts.image_path if post_media is empty
+                // Fallback to legacy posts single media columns if post_media is empty
                 if (empty($media_items)) {
-                    $raw_file = $post['image_path'] ?? $post['image_url'] ?? $post['image'] ?? $post['file_path'] ?? $post['media_url'] ?? null;
+                    $raw_file = $post['image_url'] ?? $post['image_path'] ?? $post['image'] ?? $post['file_path'] ?? $post['media_url'] ?? null;
                     $single_media = resolveImagePath($raw_file);
                     if (!empty($single_media)) {
                         $media_items[] = $single_media;
@@ -277,6 +295,17 @@ $encoded_data = [];
                         <div class="header-info">
                             <a href="profile.php?id=<?php echo $post['user_id']; ?>" class="feed-username-link">
                                 <span class="username"><?php echo htmlspecialchars($post['username']); ?></span>
+                                <span class="post-visibility-badge">
+                                    <?php if ($visibility === 'followers'): ?>
+                                        <i class="fa-solid fa-users"></i> Followers
+                                    <?php elseif ($visibility === 'friends'): ?>
+                                        <i class="fa-solid fa-user-group"></i> Friends
+                                    <?php elseif ($visibility === 'only_me'): ?>
+                                        <i class="fa-solid fa-lock"></i> Only Me
+                                    <?php else: ?>
+                                        <i class="fa-solid fa-globe"></i> Public
+                                    <?php endif; ?>
+                                </span>
                             </a>
                             <span class="post-time-top"><?php echo date('Y-m-d H:i', strtotime($post['created_at'])); ?></span>
                         </div>
@@ -284,7 +313,7 @@ $encoded_data = [];
 
                     <?php if (!empty($post['caption'])): ?>
                         <div class="post-info">
-                            <div class="post-caption"><?php echo htmlspecialchars($post['caption']); ?></div>
+                            <div class="post-caption"><?php echo nl2br(htmlspecialchars($post['caption'])); ?></div>
                         </div>
                     <?php endif; ?>
 
@@ -298,7 +327,7 @@ $encoded_data = [];
                                 $more_count = $total_media - 4;
                                 ?>
                                 <div class="media-item-box" data-ui-action="feed-open-lightbox" data-media="<?php echo $media_json; ?>" data-media-index="<?php echo $i; ?>">
-                                    <?php if (in_array($ext, ['mp4', 'webm', 'mov'])): ?>
+                                    <?php if (in_array($ext, ['mp4', 'webm', 'mov', 'ogg'])): ?>
                                         <video src="<?php echo htmlspecialchars($media_src); ?>" class="post-media-element"></video>
                                     <?php else: ?>
                                         <img src="<?php echo htmlspecialchars($media_src); ?>" class="post-media-element" alt="Post photo">
@@ -387,6 +416,22 @@ $encoded_data = [];
     <script src="../js/index.js"></script>
     <script src="../js/actions.js"></script>
     <script src="../js/badge.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('post_id');
+            if (postId) {
+                const targetPost = document.getElementById('post_' + postId);
+                if (targetPost) {
+                    targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetPost.classList.add('highlighted-post');
+                    setTimeout(() => {
+                        targetPost.classList.remove('highlighted-post');
+                    }, 2500);
+                }
+            }
+        });
+    </script>
     <?php include __DIR__ . '/suggestions_widget.php'; ?>
 </body>
 
