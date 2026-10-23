@@ -1018,3 +1018,70 @@ $additional_translations['mn'] += [
     'post_shared_success' => 'Нийтлэлийг амжилттай хуваалцлаа.',
     'profile_updated_success' => 'Профайлыг амжилттай шинэчиллээ.',
 ];
+
+$translation_controls = [
+    'zh' => [
+        'translate' => '翻译', 'translation_loading' => '正在翻译...', 'translation_unavailable' => '服务器翻译服务尚未配置。',
+        'translation_failed' => '无法翻译此文本，请重试。', 'translation_too_long' => '文本过长，无法翻译。',
+        'auto_translate' => '自动翻译', 'auto_translate_on' => '自动翻译：开', 'auto_translate_off' => '自动翻译：关',
+    ],
+    'ko' => [
+        'translate' => '번역', 'translation_loading' => '번역 중...', 'translation_unavailable' => '서버 번역 서비스가 설정되지 않았습니다.',
+        'translation_failed' => '번역할 수 없습니다. 다시 시도해 주세요.', 'translation_too_long' => '텍스트가 너무 길어 번역할 수 없습니다.',
+        'auto_translate' => '자동 번역', 'auto_translate_on' => '자동 번역: 켜짐', 'auto_translate_off' => '자동 번역: 꺼짐',
+    ],
+    'hi' => [
+        'translate' => 'अनुवाद करें', 'translation_loading' => 'अनुवाद हो रहा है...', 'translation_unavailable' => 'सर्वर अनुवाद सेवा कॉन्फ़िगर नहीं है।',
+        'translation_failed' => 'अनुवाद नहीं हो सका। कृपया फिर से कोशिश करें।', 'translation_too_long' => 'अनुवाद के लिए यह पाठ बहुत लंबा है।',
+        'auto_translate' => 'स्वचालित अनुवाद', 'auto_translate_on' => 'स्वचालित अनुवाद: चालू', 'auto_translate_off' => 'स्वचालित अनुवाद: बंद',
+    ],
+    'bn' => [
+        'translate' => 'অনুবাদ করুন', 'translation_loading' => 'অনুবাদ করা হচ্ছে...', 'translation_unavailable' => 'সার্ভার অনুবাদ পরিষেবা কনফিগার করা নেই।',
+        'translation_failed' => 'অনুবাদ করা যায়নি। আবার চেষ্টা করুন।', 'translation_too_long' => 'অনুবাদের জন্য লেখাটি অনেক বড়।',
+        'auto_translate' => 'স্বয়ংক্রিয় অনুবাদ', 'auto_translate_on' => 'স্বয়ংক্রিয় অনুবাদ: চালু', 'auto_translate_off' => 'স্বয়ংক্রিয় অনুবাদ: বন্ধ',
+    ],
+    'ne' => [
+        'translate' => 'अनुवाद गर्नुहोस्', 'translation_loading' => 'अनुवाद हुँदैछ...', 'translation_unavailable' => 'सर्भर अनुवाद सेवा कन्फिगर गरिएको छैन।',
+        'translation_failed' => 'अनुवाद गर्न सकिएन। फेरि प्रयास गर्नुहोस्।', 'translation_too_long' => 'अनुवादका लागि यो पाठ धेरै लामो छ।',
+        'auto_translate' => 'स्वचालित अनुवाद', 'auto_translate_on' => 'स्वचालित अनुवाद: चालु', 'auto_translate_off' => 'स्वचालित अनुवाद: बन्द',
+    ],
+    'ru' => [
+        'translate' => 'Перевести', 'translation_loading' => 'Перевод...', 'translation_unavailable' => 'Служба перевода на сервере не настроена.',
+        'translation_failed' => 'Не удалось перевести текст. Попробуйте ещё раз.', 'translation_too_long' => 'Текст слишком длинный для перевода.',
+        'auto_translate' => 'Автоперевод', 'auto_translate_on' => 'Автоперевод: включён', 'auto_translate_off' => 'Автоперевод: выключен',
+    ],
+    'fr' => [
+        'translate' => 'Traduire', 'translation_loading' => 'Traduction en cours...', 'translation_unavailable' => 'Le service de traduction du serveur n’est pas configuré.',
+        'translation_failed' => 'Impossible de traduire ce texte. Veuillez réessayer.', 'translation_too_long' => 'Ce texte est trop long pour être traduit.',
+        'auto_translate' => 'Traduction automatique', 'auto_translate_on' => 'Traduction automatique : activée', 'auto_translate_off' => 'Traduction automatique : désactivée',
+    ],
+    'si' => [
+        'translate' => 'පරිවර්තනය කරන්න', 'translation_loading' => 'පරිවර්තනය කරමින්...', 'translation_unavailable' => 'සේවාදායකයේ පරිවර්තන සේවාව සකසා නැත.',
+        'translation_failed' => 'මෙය පරිවර්තනය කළ නොහැක. නැවත උත්සාහ කරන්න.', 'translation_too_long' => 'පරිවර්තනය කිරීමට මෙම පෙළ දිග වැඩිය.',
+        'auto_translate' => 'ස්වයංක්‍රීය පරිවර්තනය', 'auto_translate_on' => 'ස්වයංක්‍රීය පරිවර්තනය: ක්‍රියාත්මකයි', 'auto_translate_off' => 'ස්වයංක්‍රීය පරිවර්තනය: අක්‍රියයි',
+    ],
+    'ta' => [
+        'translate' => 'மொழிபெயர்க்கவும்', 'translation_loading' => 'மொழிபெயர்க்கப்படுகிறது...', 'translation_unavailable' => 'சேவையக மொழிபெயர்ப்பு சேவை அமைக்கப்படவில்லை.',
+        'translation_failed' => 'இந்த உரையை மொழிபெயர்க்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.', 'translation_too_long' => 'இந்த உரை மொழிபெயர்க்க மிகவும் நீளமாக உள்ளது.',
+        'auto_translate' => 'தானியங்கி மொழிபெயர்ப்பு', 'auto_translate_on' => 'தானியங்கி மொழிபெயர்ப்பு: இயக்கம்', 'auto_translate_off' => 'தானியங்கி மொழிபெயர்ப்பு: முடக்கம்',
+    ],
+    'my' => [
+        'translate' => 'ဘာသာပြန်ရန်', 'translation_loading' => 'ဘာသာပြန်နေသည်...', 'translation_unavailable' => 'ဆာဗာဘာသာပြန်ဝန်ဆောင်မှုကို သတ်မှတ်မထားပါ။',
+        'translation_failed' => 'ဤစာသားကို ဘာသာပြန်၍မရပါ။ ထပ်မံကြိုးစားပါ။', 'translation_too_long' => 'ဤစာသားသည် ဘာသာပြန်ရန် ရှည်လွန်းသည်။',
+        'auto_translate' => 'အလိုအလျောက် ဘာသာပြန်', 'auto_translate_on' => 'အလိုအလျောက် ဘာသာပြန်: ဖွင့်', 'auto_translate_off' => 'အလိုအလျောက် ဘာသာပြန်: ပိတ်',
+    ],
+    'mn' => [
+        'translate' => 'Орчуулах', 'translation_loading' => 'Орчуулж байна...', 'translation_unavailable' => 'Серверийн орчуулгын үйлчилгээг тохируулаагүй байна.',
+        'translation_failed' => 'Текстийг орчуулж чадсангүй. Дахин оролдоно уу.', 'translation_too_long' => 'Энэ текст орчуулахад хэт урт байна.',
+        'auto_translate' => 'Автомат орчуулга', 'auto_translate_on' => 'Автомат орчуулга: асаалттай', 'auto_translate_off' => 'Автомат орчуулга: унтраалттай',
+    ],
+    'vi' => [
+        'translate' => 'Dịch', 'translation_loading' => 'Đang dịch...', 'translation_unavailable' => 'Dịch vụ dịch trên máy chủ chưa được cấu hình.',
+        'translation_failed' => 'Không thể dịch văn bản này. Vui lòng thử lại.', 'translation_too_long' => 'Văn bản này quá dài để dịch.',
+        'auto_translate' => 'Tự động dịch', 'auto_translate_on' => 'Tự động dịch: Bật', 'auto_translate_off' => 'Tự động dịch: Tắt',
+    ],
+];
+
+foreach ($translation_controls as $language => $strings) {
+    $additional_translations[$language] = array_replace($additional_translations[$language] ?? [], $strings);
+}

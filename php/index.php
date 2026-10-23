@@ -329,7 +329,13 @@ foreach ($posts as $p) {
 
                     <?php if (!empty($post['caption'])): ?>
                         <div class="post-info">
-                            <div class="post-caption"><?php echo htmlspecialchars($post['caption']); ?></div>
+                            <div data-translatable>
+                                <div class="post-caption" data-translation-source><?php echo htmlspecialchars($post['caption'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="translation-tools">
+                                    <button type="button" class="translate-button" data-translate-button data-label="<?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(__('translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                                    <span class="translation-result" data-translation-result hidden></span>
+                                </div>
+                            </div>
                         </div>
                     <?php endif; ?>
 

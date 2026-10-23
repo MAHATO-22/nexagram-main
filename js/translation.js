@@ -28,42 +28,35 @@
     ].join(':');
     const autoTranslateButton = document.querySelector('[data-auto-translate]');
     const autoTranslateStatus = document.querySelector('[data-auto-translate-status]');
-    const savedAutoTranslate = window.localStorage.getItem(autoTranslateKey);
+    let savedAutoTranslate = null;
+    try {
+        savedAutoTranslate = window.localStorage.getItem(autoTranslateKey);
+    } catch (error) {
+        // Translation remains enabled for this page when storage is unavailable.
+    }
     let autoTranslateEnabled = savedAutoTranslate === null || savedAutoTranslate === 'true';
     let autoTranslateRunning = false;
     const translationQueue = new Set();
 
     async function translateText(text) {
-        if (
-            !window.LanguageDetector ||
-            typeof window.LanguageDetector.create !== 'function' ||
-            !window.Translator ||
-            typeof window.Translator.create !== 'function'
-        ) {
-            throw new Error('unavailable');
-        }
-
-        const detector = await window.LanguageDetector.create();
+        const response = await fetch('translate.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+            body: JSON.stringify({text})
+        });
+        let result;
         try {
-            const detections = await detector.detect(text);
-            const detectedLanguage = detections[0] && detections[0].detectedLanguage;
-            const sourceLanguage = detectedLanguage === 'zh' ? 'zh-Hans' : detectedLanguage;
-            if (!sourceLanguage) {
-                throw new Error('unsupported');
-            }
-            if (sourceLanguage === targetLanguage) {
-                return text;
-            }
-
-            const translator = await window.Translator.create({sourceLanguage, targetLanguage});
-            try {
-                return await translator.translate(text);
-            } finally {
-                translator.destroy();
-            }
-        } finally {
-            detector.destroy();
+            result = await response.json();
+        } catch (error) {
+            throw new Error('failed');
         }
+        if (!response.ok) {
+            throw new Error(result.error === 'translation_not_configured' ? 'unavailable' : 'failed');
+        }
+        if (typeof result.translated_text !== 'string') {
+            throw new Error('failed');
+        }
+        return result.translated_text;
     }
 
     function updateAutoTranslateButton() {
@@ -84,6 +77,12 @@
         const text = source && source.innerText.trim();
 
         if (!container || !source || !output || !button || !text || parent.dataset.translationBusy === 'true') {
+            return true;
+        }
+
+        if (text.length > 5000) {
+            output.hidden = false;
+            output.textContent = tooLongMessage;
             return true;
         }
 
@@ -146,7 +145,11 @@
         updateAutoTranslateButton();
         autoTranslateButton.addEventListener('click', function () {
             autoTranslateEnabled = !autoTranslateEnabled;
-            window.localStorage.setItem(autoTranslateKey, String(autoTranslateEnabled));
+            try {
+                window.localStorage.setItem(autoTranslateKey, String(autoTranslateEnabled));
+            } catch (error) {
+                // Keep the selected state for this page when storage is unavailable.
+            }
             updateAutoTranslateButton();
             if (autoTranslateEnabled) {
                 translateAll();
@@ -193,7 +196,8 @@
     }
 
     document.addEventListener('click', async function (event) {
-        const translateButton = event.target.closest('[data-translate-button]');
+        const target = event.target;
+        const translateButton = target instanceof Element && target.closest('[data-translate-button]');
         if (translateButton) {
             const container = translateButton.closest('.translation-tools');
             const parent = container && container.closest('[data-translatable]');
@@ -204,6 +208,14 @@
             const text = textarea ? textarea.value.trim() : (source ? source.innerText.trim() : '');
 
             if (!container || !text || translateButton.disabled) {
+                return;
+            }
+            if (text.length > 5000) {
+                output.hidden = false;
+                output.textContent = tooLongMessage;
+                if (useButton) {
+                    useButton.hidden = true;
+                }
                 return;
             }
 
@@ -232,7 +244,7 @@
             return;
         }
 
-        const useButton = event.target.closest('[data-translation-use]');
+        const useButton = target instanceof Element && target.closest('[data-translation-use]');
         if (useButton) {
             const container = useButton.closest('.translation-tools');
             const textarea = container && document.getElementById(container.dataset.translationInput || '');
