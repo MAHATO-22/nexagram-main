@@ -255,14 +255,7 @@ function resolveImagePath($fileName) {
         .nav-item:hover a, .nav-item.active a { background-color: var(--hover-bg); }
         .nav-item i { font-size: 18px; width: 22px; }
 
-        /* Language Selector Styling */
-        .lang-dropdown { position: relative; margin-top: auto; }
-        .lang-dropdown > a { cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 600; color: var(--text-main); }
-        .lang-arrow { margin-left: auto; font-size: 12px; color: var(--text-sub); transition: transform 0.2s; }
-        .lang-menu { display: none; position: absolute; bottom: 100%; left: 0; width: 100%; background: var(--sidebar-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 6px; box-shadow: var(--glass-shadow); margin-bottom: 8px; z-index: 10; }
-        .lang-menu.show { display: flex; flex-direction: column; gap: 4px; }
-        .lang-menu a { padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--text-main); text-decoration: none; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
-        .lang-menu a:hover { background-color: var(--hover-bg); }
+        .settings-nav-item { margin-top: auto; }
 
         .theme-btn { cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 600; transition: background 0.2s; }
         .theme-btn:hover { background-color: var(--hover-bg); }
@@ -348,7 +341,7 @@ function resolveImagePath($fileName) {
 <body>
 
     <nav class="sidebar">
-        <div class="logo">Nexagram</div>
+        <a href="index.php" class="logo logo-link">Nexagram</a>
         <ul class="nav-menu">
             <li class="nav-item"><a href="index.php"><i class="fa-solid fa-house"></i> <?php echo __('nav_home'); ?></a></li>
             <li class="nav-item"><a href="friends.php"><i class="fa-solid fa-user-group"></i> <?php echo __('nav_friends'); ?></a></li>
@@ -357,17 +350,8 @@ function resolveImagePath($fileName) {
             <li class="nav-item"><a href="create_post.php"><i class="fa-solid fa-square-plus"></i> <?php echo __('nav_create'); ?></a></li>
             <li class="nav-item active"><a href="profile.php"><i class="fa-solid fa-user"></i> <?php echo __('nav_profile'); ?></a></li>
 
-            <!-- Language Dropdown Item -->
-            <li class="nav-item lang-dropdown">
-                <a href="javascript:void(0);" onclick="toggleLangMenu()">
-                    <i class="fa-solid fa-globe"></i>
-                    <span><?php echo $current_lang === 'ja' ? 'JP 日本語' : 'EN English'; ?></span>
-                    <i class="fa-solid fa-chevron-down lang-arrow"></i>
-                </a>
-                <div class="lang-menu" id="langMenu">
-                    <a href="?id=<?php echo $profile_user_id; ?>&lang=ja">JP 日本語</a>
-                    <a href="?id=<?php echo $profile_user_id; ?>&lang=en">EN English</a>
-                </div>
+            <li class="nav-item settings-nav-item">
+                <a href="settings.php"><i class="fa-solid fa-gear"></i> <?php echo __('nav_settings'); ?></a>
             </li>
 
             <li class="theme-btn" id="theme-toggle">
@@ -646,22 +630,6 @@ function resolveImagePath($fileName) {
             darkMode: "<?php echo addslashes(__('dark_mode')); ?>",
             lightMode: "<?php echo addslashes(__('light_mode')); ?>"
         };
-
-        // Language Dropdown Handler
-        function toggleLangMenu() {
-            const langMenu = document.getElementById('langMenu');
-            if (langMenu) {
-                langMenu.classList.toggle('show');
-            }
-        }
-
-        document.addEventListener('click', function(e) {
-            const dropdown = document.querySelector('.lang-dropdown');
-            const langMenu = document.getElementById('langMenu');
-            if (dropdown && !dropdown.contains(e.target) && langMenu) {
-                langMenu.classList.remove('show');
-            }
-        });
 
         // Edit Profile Details Modal Handlers
         function openProfileEditModal() {
