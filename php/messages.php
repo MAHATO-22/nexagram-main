@@ -290,14 +290,7 @@ function previewText($m) {
         <div class="chat-layout">
 
             <section class="conv-panel">
-                <div class="panel-title">
-                    <span><?php echo htmlspecialchars(__('nav_messages'), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <a class="messages-settings-button" href="settings.php"
-                       aria-label="<?php echo htmlspecialchars(__('nav_settings'), ENT_QUOTES, 'UTF-8'); ?>"
-                       title="<?php echo htmlspecialchars(__('nav_settings'), ENT_QUOTES, 'UTF-8'); ?>">
-                        <i class="fa-solid fa-gear" aria-hidden="true"></i>
-                    </a>
-                </div>
+                <div class="panel-title"><?php echo htmlspecialchars(__('nav_messages'), ENT_QUOTES, 'UTF-8'); ?></div>
                 <div class="auto-translation-control">
                     <button type="button" class="auto-translate-toggle" data-auto-translate
                             data-enabled-label="<?php echo htmlspecialchars(__('auto_translate_on'), ENT_QUOTES, 'UTF-8'); ?>"
