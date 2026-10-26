@@ -126,7 +126,7 @@ foreach ($posts as $p) {
       data-translation-too-long="<?php echo htmlspecialchars(__('translation_too_long'), ENT_QUOTES, 'UTF-8'); ?>"
       data-translation-target="<?php echo htmlspecialchars($current_lang, ENT_QUOTES, 'UTF-8'); ?>"
       data-translation-user="<?php echo (int)$current_user_id; ?>">
-      <script src="https://js.puter.com/v2/"></script>
+
 
 <head>
     <meta charset="UTF-8">

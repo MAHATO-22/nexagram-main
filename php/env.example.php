@@ -7,6 +7,7 @@ $pass = 'Your Password';  // XAMPP or Laragon default empty password
 $charset = 'utf8mb4';
 
 // Optional LibreTranslate-compatible service URL (for example https://translate.example.com).
+// When unset, the translation endpoint uses Google's public translation service without an API key.
 // NEXAGRAM_TRANSLATION_ENDPOINT and NEXAGRAM_TRANSLATION_API_KEY environment variables override these values.
 $translation_endpoint = '';
 $translation_api_key = '';

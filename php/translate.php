@@ -57,34 +57,42 @@ $apiKey = is_string($apiKeySetting) && trim($apiKeySetting) !== ''
     ? trim($apiKeySetting)
     : (isset($translation_api_key) && is_string($translation_api_key) ? trim($translation_api_key) : '');
 
-if ($endpoint === '') {
-    translationResponse(503, ['error' => 'translation_not_configured']);
-}
-
 if (!function_exists('curl_init')) {
     error_log('The PHP cURL extension is required for the translation service.');
     translationResponse(503, ['error' => 'translation_failed']);
 }
 
-$endpointParts = parse_url($endpoint);
-if (
-    !is_array($endpointParts)
-    || !isset($endpointParts['scheme'], $endpointParts['host'])
-    || !in_array(strtolower($endpointParts['scheme']), ['https', 'http'], true)
-) {
-    error_log('Translation endpoint configuration is invalid.');
-    translationResponse(503, ['error' => 'translation_not_configured']);
-}
+$useLibreTranslate = $endpoint !== '';
+if ($useLibreTranslate) {
+    $endpointParts = parse_url($endpoint);
+    if (
+        !is_array($endpointParts)
+        || !isset($endpointParts['scheme'], $endpointParts['host'])
+        || !in_array(strtolower($endpointParts['scheme']), ['https', 'http'], true)
+    ) {
+        error_log('Translation endpoint configuration is invalid.');
+        translationResponse(503, ['error' => 'translation_not_configured']);
+    }
 
-$url = $endpoint . (preg_match('~/translate$~i', $endpoint) ? '' : '/translate');
-$payload = [
-    'q' => trim($text),
-    'source' => 'auto',
-    'target' => $targetLanguage,
-    'format' => 'text',
-];
-if ($apiKey !== '') {
-    $payload['api_key'] = $apiKey;
+    $url = $endpoint . (preg_match('~/translate$~i', $endpoint) ? '' : '/translate');
+    $payload = [
+        'q' => trim($text),
+        'source' => 'auto',
+        'target' => $targetLanguage,
+        'format' => 'text',
+    ];
+    if ($apiKey !== '') {
+        $payload['api_key'] = $apiKey;
+    }
+} else {
+    $googleTargetLanguage = $targetLanguage === 'zh' ? 'zh-CN' : $targetLanguage;
+    $url = 'https://translate.googleapis.com/translate_a/single?' . http_build_query([
+        'client' => 'gtx',
+        'sl' => 'auto',
+        'tl' => $googleTargetLanguage,
+        'dt' => 't',
+        'q' => trim($text),
+    ], '', '&', PHP_QUERY_RFC3986);
 }
 
 $curl = curl_init($url);
@@ -94,9 +102,6 @@ if ($curl === false) {
 }
 
 curl_setopt_array($curl, [
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
-    CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_CONNECTTIMEOUT => 5,
     CURLOPT_TIMEOUT => 20,
@@ -104,6 +109,15 @@ curl_setopt_array($curl, [
     CURLOPT_SSL_VERIFYPEER => true,
     CURLOPT_SSL_VERIFYHOST => 2,
 ]);
+if ($useLibreTranslate) {
+    curl_setopt_array($curl, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+    ]);
+} else {
+    curl_setopt($curl, CURLOPT_HTTPGET, true);
+}
 
 $responseBody = curl_exec($curl);
 $curlError = curl_error($curl);
@@ -116,9 +130,24 @@ if (!is_string($responseBody) || $status < 200 || $status >= 300) {
 }
 
 $response = json_decode($responseBody, true);
-if (!is_array($response) || !isset($response['translatedText']) || !is_string($response['translatedText'])) {
+$translatedText = null;
+if ($useLibreTranslate) {
+    $translatedText = is_array($response) && isset($response['translatedText']) && is_string($response['translatedText'])
+        ? $response['translatedText']
+        : null;
+} elseif (is_array($response) && isset($response[0]) && is_array($response[0])) {
+    $segments = [];
+    foreach ($response[0] as $segment) {
+        if (is_array($segment) && isset($segment[0]) && is_string($segment[0])) {
+            $segments[] = $segment[0];
+        }
+    }
+    $translatedText = $segments !== [] ? implode('', $segments) : null;
+}
+
+if (!is_string($translatedText) || $translatedText === '') {
     error_log('Translation service returned an invalid response.');
     translationResponse(502, ['error' => 'translation_failed']);
 }
 
-translationResponse(200, ['translated_text' => $response['translatedText']]);
+translationResponse(200, ['translated_text' => $translatedText]);
