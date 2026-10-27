@@ -9,9 +9,23 @@
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         const themeText = document.getElementById('theme-text');
+        const newMessageToggle = document.getElementById('newMessageToggle');
+        const newMessageDialog = document.getElementById('newMessageDialog');
+        const newMessageClose = document.getElementById('newMessageClose');
         const darkModeText = window.NEXAGRAM_CONFIG.values[4];
         const lightModeText = window.NEXAGRAM_CONFIG.values[5];
         const sendErrorLabels = window.NEXAGRAM_CONFIG.values.slice(6);
+
+        if (newMessageDialog.dataset.openOnLoad === 'true') {
+            newMessageDialog.showModal();
+        }
+        newMessageToggle.addEventListener('click', () => newMessageDialog.showModal());
+        newMessageClose.addEventListener('click', () => newMessageDialog.close());
+        newMessageDialog.addEventListener('click', event => {
+            if (event.target === newMessageDialog) {
+                newMessageDialog.close();
+            }
+        });
 
         function appendTranslationTools(container, sourceText) {
             const translatable = document.createElement('div');

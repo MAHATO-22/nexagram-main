@@ -290,37 +290,14 @@ function previewText($m) {
         <div class="chat-layout">
 
             <section class="conv-panel">
-                <div class="panel-title"><?php echo htmlspecialchars(__('nav_messages'), ENT_QUOTES, 'UTF-8'); ?></div>
-                <div class="auto-translation-control">
-                    <button type="button" class="auto-translate-toggle" data-auto-translate
-                            data-enabled-label="<?php echo htmlspecialchars(__('auto_translate_on'), ENT_QUOTES, 'UTF-8'); ?>"
-                            data-disabled-label="<?php echo htmlspecialchars(__('auto_translate_off'), ENT_QUOTES, 'UTF-8'); ?>"
-                            aria-pressed="false"><?php echo htmlspecialchars(__('auto_translate'), ENT_QUOTES, 'UTF-8'); ?></button>
-                    <span class="auto-translate-status" data-auto-translate-status role="status"></span>
+                <div class="panel-title">
+                    <span><?php echo htmlspecialchars(__('nav_messages'), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <button type="button" class="new-message-button" id="newMessageToggle"
+                            aria-label="<?php echo htmlspecialchars(__('new_message'), ENT_QUOTES, 'UTF-8'); ?>"
+                            title="<?php echo htmlspecialchars(__('new_message'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
                 </div>
-                <details class="group-create" <?php echo $group_error !== '' ? 'open' : ''; ?>>
-                    <summary><i class="fa-solid fa-users"></i> <?php echo htmlspecialchars(__('group_create'), ENT_QUOTES, 'UTF-8'); ?></summary>
-                    <?php if ($group_error !== ''): ?>
-                        <p class="group-error" role="alert"><?php echo htmlspecialchars($group_error, ENT_QUOTES, 'UTF-8'); ?></p>
-                    <?php endif; ?>
-                    <form method="post" action="messages.php">
-                        <input type="hidden" name="create_group" value="1">
-                        <label for="group-name"><?php echo htmlspecialchars(__('group_name'), ENT_QUOTES, 'UTF-8'); ?></label>
-                        <input id="group-name" type="text" name="group_name" maxlength="80" required>
-                        <fieldset>
-                            <legend><?php echo htmlspecialchars(__('group_choose_friends'), ENT_QUOTES, 'UTF-8'); ?></legend>
-                            <?php foreach ($all_users as $friend): ?>
-                                <?php if (!isset($blocked_peers[$friend['id']])): ?>
-                                    <label class="group-friend-option">
-                                        <input type="checkbox" name="group_friends[]" value="<?php echo (int)$friend['id']; ?>">
-                                        <?php echo htmlspecialchars($friend['username'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </label>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </fieldset>
-                        <button class="group-create-button" type="submit"><?php echo htmlspecialchars(__('group_create'), ENT_QUOTES, 'UTF-8'); ?></button>
-                    </form>
-                </details>
                 <div class="conv-list">
                     <?php foreach ($groups as $group): ?>
                         <a href="messages.php?group=<?php echo (int)$group['id']; ?>"
@@ -486,6 +463,62 @@ function previewText($m) {
             </section>
         </div>
     </main>
+
+    <dialog class="new-message-dialog" id="newMessageDialog" aria-labelledby="newMessageTitle"
+            data-open-on-load="<?php echo $group_error !== '' ? 'true' : 'false'; ?>">
+        <div class="new-message-dialog-header">
+            <h2 id="newMessageTitle"><?php echo htmlspecialchars(__('new_message'), ENT_QUOTES, 'UTF-8'); ?></h2>
+            <button type="button" class="new-message-close" id="newMessageClose"
+                    aria-label="<?php echo htmlspecialchars(__('close'), ENT_QUOTES, 'UTF-8'); ?>">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="auto-translation-control">
+            <button type="button" class="auto-translate-toggle" data-auto-translate
+                    data-enabled-label="<?php echo htmlspecialchars(__('auto_translate_on'), ENT_QUOTES, 'UTF-8'); ?>"
+                    data-disabled-label="<?php echo htmlspecialchars(__('auto_translate_off'), ENT_QUOTES, 'UTF-8'); ?>"
+                    aria-pressed="false"><?php echo htmlspecialchars(__('auto_translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+            <span class="auto-translate-status" data-auto-translate-status role="status"></span>
+        </div>
+        <details class="group-create" <?php echo $group_error !== '' ? 'open' : ''; ?>>
+            <summary><i class="fa-solid fa-users"></i> <?php echo htmlspecialchars(__('group_create'), ENT_QUOTES, 'UTF-8'); ?></summary>
+            <?php if ($group_error !== ''): ?>
+                <p class="group-error" role="alert"><?php echo htmlspecialchars($group_error, ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php endif; ?>
+            <form method="post" action="messages.php">
+                <input type="hidden" name="create_group" value="1">
+                <label for="group-name"><?php echo htmlspecialchars(__('group_name'), ENT_QUOTES, 'UTF-8'); ?></label>
+                <input id="group-name" type="text" name="group_name" maxlength="80" required>
+                <fieldset>
+                    <legend><?php echo htmlspecialchars(__('group_choose_friends'), ENT_QUOTES, 'UTF-8'); ?></legend>
+                    <?php foreach ($all_users as $friend): ?>
+                        <?php if (!isset($blocked_peers[$friend['id']])): ?>
+                            <label class="group-friend-option">
+                                <input type="checkbox" name="group_friends[]" value="<?php echo (int)$friend['id']; ?>">
+                                <?php echo htmlspecialchars($friend['username'], ENT_QUOTES, 'UTF-8'); ?>
+                            </label>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </fieldset>
+                <button class="group-create-button" type="submit"><?php echo htmlspecialchars(__('group_create'), ENT_QUOTES, 'UTF-8'); ?></button>
+            </form>
+        </details>
+        <div class="new-message-friends">
+            <?php foreach ($all_users as $friend): ?>
+                <?php if (!isset($blocked_peers[$friend['id']])): ?>
+                    <a class="new-message-friend" href="messages.php?user=<?php echo (int)$friend['id']; ?>">
+                        <?php $friend_avatar = resolveImagePath($friend['profile_image']); ?>
+                        <?php if ($friend_avatar): ?>
+                            <img class="conv-avatar" src="<?php echo htmlspecialchars($friend_avatar, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                        <?php else: ?>
+                            <span class="avatar-placeholder"><?php echo htmlspecialchars(mb_substr($friend['username'], 0, 1, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
+                        <span class="conv-name"><?php echo htmlspecialchars($friend['username'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    </a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+    </dialog>
 
     <div class="lightbox" id="lightbox" data-ui-action="close-message-lightbox"><img id="lightboxImg" src=""></div>
 
