@@ -48,6 +48,7 @@ $notifications_enabled = (bool)$notification_setting_stmt->fetchColumn();
     <script src="../js/theme-init.js"></script>
     <link rel="stylesheet" href="../css/settings.css">
     <link rel="stylesheet" href="../css/suggestions-widget.css">
+    <link rel="stylesheet" href="../css/translation.css">
 </head>
 <body>
     <main class="settings-card">
@@ -90,8 +91,22 @@ $notifications_enabled = (bool)$notification_setting_stmt->fetchColumn();
                 </form>
             </div>
         </section>
+        <section class="setting-section" aria-labelledby="translation-heading">
+            <div class="setting-icon"><i class="fa-solid fa-language"></i></div>
+            <div class="setting-content">
+                <h2 id="translation-heading"><?php echo htmlspecialchars(__('auto_translate'), ENT_QUOTES, 'UTF-8'); ?></h2>
+                <div class="auto-translation-control">
+                    <button type="button" class="auto-translate-toggle" data-auto-translate
+                            data-enabled-label="<?php echo htmlspecialchars(__('auto_translate_on'), ENT_QUOTES, 'UTF-8'); ?>"
+                            data-disabled-label="<?php echo htmlspecialchars(__('auto_translate_off'), ENT_QUOTES, 'UTF-8'); ?>"
+                            aria-pressed="false"><?php echo htmlspecialchars(__('auto_translate'), ENT_QUOTES, 'UTF-8'); ?></button>
+                    <span class="auto-translate-status" data-auto-translate-status role="status"></span>
+                </div>
+            </div>
+        </section>
     </main>
     <?php include __DIR__ . '/suggestions_widget.php'; ?>
+    <script src="../js/translation.js" defer></script>
     <script src="../js/settings.js" defer></script>
 </body>
 </html>

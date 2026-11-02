@@ -214,13 +214,6 @@ foreach ($posts as $p) {
 
     <main class="main-content">
         <div class="feed-container">
-            <div class="auto-translation-control">
-                <button type="button" class="auto-translate-toggle" data-auto-translate
-                        data-enabled-label="<?php echo htmlspecialchars(__('auto_translate_on'), ENT_QUOTES, 'UTF-8'); ?>"
-                        data-disabled-label="<?php echo htmlspecialchars(__('auto_translate_off'), ENT_QUOTES, 'UTF-8'); ?>"
-                        aria-pressed="false"><?php echo htmlspecialchars(__('auto_translate'), ENT_QUOTES, 'UTF-8'); ?></button>
-                <span class="auto-translate-status" data-auto-translate-status role="status"></span>
-            </div>
             <section class="suggestions-panel" aria-labelledby="suggestions-title">
                 <div class="suggestions-heading">
                     <div>
