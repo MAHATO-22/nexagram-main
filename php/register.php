@@ -9,19 +9,21 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role = $_POST['role'] ?? 'student';
-    $user_code = trim($_POST['user_code'] ?? ''); // Student ID or Teacher ID
+    $role = is_string($role) ? $role : '';
+    $user_code = trim($_POST['user_code'] ?? '');
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $department = $_POST['department'] ?? '';
     $class_name = trim($_POST['class_name'] ?? '');
     $school_name = trim($_POST['school_name'] ?? '');
+    $is_student = $role === 'student';
 
     // Domain security check configuration
     $allowed_domain = 'yse-c.net';
     $email_domain = strtolower(substr(strrchr($email, "@"), 1));
 
-    if (empty($user_code) || empty($username) || empty($email) || empty($password) || empty($department)) {
+    if (!in_array($role, ['student', 'teacher'], true) || empty($username) || empty($email) || empty($password) || ($is_student && (empty($user_code) || empty($department)))) {
         $error = __('required_fields');
     } elseif ($email_domain !== $allowed_domain) {
         $error = "Registration is restricted to official @" . $allowed_domain . " email addresses only.";
@@ -37,7 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
                 $stmt = $pdo->prepare("INSERT INTO users (role, user_code, student_id, username, email, password, department, class_name, school_name, language_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$role, $user_code, $user_code, $username, $email, $hashedPassword, $department, $class_name !== '' ? $class_name : null, $school_name !== '' ? $school_name : null, $current_lang]);
+                $stmt->execute([
+                    $role,
+                    $is_student ? $user_code : null,
+                    $is_student ? $user_code : null,
+                    $username,
+                    $email,
+                    $hashedPassword,
+                    $is_student ? $department : null,
+                    $is_student && $class_name !== '' ? $class_name : null,
+                    $is_student && $school_name !== '' ? $school_name : null,
+                    $current_lang,
+                ]);
 
                 $success = __('registration_success');
             }
@@ -100,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <!-- ID Input (Changes dynamically) -->
-            <div class="form-group">
+            <div class="form-group" id="userCodeGroup">
                 <input type="text" name="user_code" id="userCodeInput" class="form-input" placeholder="<?php echo htmlspecialchars(__('ph_student_id'), ENT_QUOTES, 'UTF-8'); ?>" data-student-placeholder="<?php echo htmlspecialchars(__('ph_student_id'), ENT_QUOTES, 'UTF-8'); ?>" data-teacher-placeholder="<?php echo htmlspecialchars(__('ph_teacher_id'), ENT_QUOTES, 'UTF-8'); ?>" required>
             </div>
 
@@ -120,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <!-- Department Dropdown Selection -->
-            <div class="form-group">
+            <div class="form-group" id="departmentGroup">
                 <select name="department" class="form-select" required>
                     <option value="" disabled selected><?php echo htmlspecialchars(__('select_dept'), ENT_QUOTES, 'UTF-8'); ?></option>
                     <option value="Global Systems"><?php echo htmlspecialchars(__('department_global_systems'), ENT_QUOTES, 'UTF-8'); ?></option>
@@ -130,11 +143,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="classGroup">
                 <input type="text" name="class_name" class="form-input" placeholder="<?php echo htmlspecialchars(__('class_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" maxlength="100">
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="schoolGroup">
                 <input type="text" name="school_name" class="form-input" placeholder="<?php echo htmlspecialchars(__('school_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" maxlength="150">
             </div>
 
