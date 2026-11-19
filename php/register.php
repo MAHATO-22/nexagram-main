@@ -112,9 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <!-- ID Input (Changes dynamically) -->
-            <div class="form-group" id="userCodeGroup">
-                <input type="text" name="user_code" id="userCodeInput" class="form-input" placeholder="<?php echo htmlspecialchars(__('ph_student_id'), ENT_QUOTES, 'UTF-8'); ?>" data-student-placeholder="<?php echo htmlspecialchars(__('ph_student_id'), ENT_QUOTES, 'UTF-8'); ?>" data-teacher-placeholder="<?php echo htmlspecialchars(__('ph_teacher_id'), ENT_QUOTES, 'UTF-8'); ?>" required>
+            <!-- ID Input (Student only) -->
+            <div class="form-group student-only" id="userCodeGroup">
+                <input type="text" name="user_code" id="userCodeInput" class="form-input" placeholder="<?php echo htmlspecialchars(__('ph_student_id'), ENT_QUOTES, 'UTF-8'); ?>" data-student-placeholder="<?php echo htmlspecialchars(__('ph_student_id'), ENT_QUOTES, 'UTF-8'); ?>" required>
             </div>
 
             <!-- Username -->
@@ -132,8 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="password" name="password" class="form-input" placeholder="<?php echo htmlspecialchars(__('ph_password'), ENT_QUOTES, 'UTF-8'); ?>" required>
             </div>
 
-            <!-- Department Dropdown Selection -->
-            <div class="form-group" id="departmentGroup">
+            <!-- Department Dropdown Selection (Student only) -->
+            <div class="form-group student-only" id="departmentGroup">
                 <select name="department" class="form-select" required>
                     <option value="" disabled selected><?php echo htmlspecialchars(__('select_dept'), ENT_QUOTES, 'UTF-8'); ?></option>
                     <option value="Global Systems"><?php echo htmlspecialchars(__('department_global_systems'), ENT_QUOTES, 'UTF-8'); ?></option>
@@ -143,11 +143,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
 
-            <div class="form-group" id="classGroup">
+            <div class="form-group student-only" id="classGroup">
                 <input type="text" name="class_name" class="form-input" placeholder="<?php echo htmlspecialchars(__('class_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" maxlength="100">
             </div>
 
-            <div class="form-group" id="schoolGroup">
+            <div class="form-group student-only" id="schoolGroup">
                 <input type="text" name="school_name" class="form-input" placeholder="<?php echo htmlspecialchars(__('school_placeholder'), ENT_QUOTES, 'UTF-8'); ?>" maxlength="150">
             </div>
 

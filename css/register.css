@@ -184,3 +184,8 @@
         .footer-text a:hover {
             text-decoration: underline;
         }
+
+        /* Student-only fields are removed from the teacher sign-up form */
+        .role-teacher .student-only {
+            display: none !important;
+        }
