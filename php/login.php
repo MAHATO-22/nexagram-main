@@ -12,6 +12,8 @@ if (isset($_SESSION['user_id'])) {
 
 $error_message = '';
 
+$resetSuccess = ($_GET['reset'] ?? '') === 'success';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -97,6 +99,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span><?php echo htmlspecialchars($error_message); ?></span>
             </div>
         <?php endif; ?>
+        <?php if ($resetSuccess): ?>
+            <div class="alert-error" style="border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.12);color:#4ade80;">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Password updated successfully. Please log in.</span>
+            </div>
+        <?php endif; ?>
 
         <form action="login.php" method="POST">
             <!-- Email Input (School Email Only) -->
@@ -114,6 +122,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <i class="fa-solid fa-lock input-icon"></i>
                     <i class="fa-regular fa-eye toggle-password" id="togglePassword"></i>
                 </div>
+            </div>
+
+            <div class="forgot-password-row">
+                <a href="forgot_password.php" class="forgot-password-link">Forgot Password?</a>
             </div>
 
             <button type="submit" class="submit-btn"><?php echo htmlspecialchars(__('login_button'), ENT_QUOTES, 'UTF-8'); ?></button>

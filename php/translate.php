@@ -104,7 +104,7 @@ if ($curl === false) {
 curl_setopt_array($curl, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_CONNECTTIMEOUT => 5,
-    CURLOPT_TIMEOUT => 20,
+    CURLOPT_TIMEOUT => 8,
     CURLOPT_FOLLOWLOCATION => false,
     CURLOPT_SSL_VERIFYPEER => true,
     CURLOPT_SSL_VERIFYHOST => 2,
@@ -124,6 +124,47 @@ $curlError = curl_error($curl);
 $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 curl_close($curl);
 
+$useMyMemory = false;
+if (!$useLibreTranslate && (!is_string($responseBody) || $status < 200 || $status >= 300)) {
+    $myMemoryLanguage = $targetLanguage === 'zh' ? 'zh-CN' : $targetLanguage;
+    $sourceLanguage = 'en';
+    if (preg_match('/[\x{3040}-\x{30FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FFF}]/u', $text)) {
+        $sourceLanguage = 'ja';
+    } elseif (preg_match('/\x{AC00}-\x{D7AF}/u', $text)) {
+        $sourceLanguage = 'ko';
+    } elseif (preg_match('/\x{0400}-\x{04FF}/u', $text)) {
+        $sourceLanguage = 'ru';
+    } elseif (preg_match('/\x{0E00}-\x{0E7F}/u', $text)) {
+        $sourceLanguage = 'th';
+    }
+    $myMemoryUrl = 'https://api.mymemory.translated.net/get?' . http_build_query([
+        'q' => trim($text),
+        'langpair' => $sourceLanguage . '|' . $myMemoryLanguage,
+    ], '', '&', PHP_QUERY_RFC3986);
+
+    $fallbackCurl = curl_init($myMemoryUrl);
+    if ($fallbackCurl !== false) {
+        curl_setopt_array($fallbackCurl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_HTTPGET => true,
+        ]);
+        $fallbackBody = curl_exec($fallbackCurl);
+        $fallbackStatus = (int)curl_getinfo($fallbackCurl, CURLINFO_RESPONSE_CODE);
+        curl_close($fallbackCurl);
+
+        if (is_string($fallbackBody) && $fallbackStatus >= 200 && $fallbackStatus < 300) {
+            $responseBody = $fallbackBody;
+            $status = $fallbackStatus;
+            $useMyMemory = true;
+        }
+    }
+}
+
 if (!is_string($responseBody) || $status < 200 || $status >= 300) {
     error_log('Translation service request failed' . ($curlError !== '' ? ': ' . $curlError : ' (HTTP ' . $status . ').'));
     translationResponse(502, ['error' => 'translation_failed']);
@@ -135,6 +176,28 @@ if ($useLibreTranslate) {
     $translatedText = is_array($response) && isset($response['translatedText']) && is_string($response['translatedText'])
         ? $response['translatedText']
         : null;
+} elseif ($useMyMemory) {
+    $translatedText = null;
+    if (
+        is_array($response)
+        && isset($response['responseData']['translatedText'])
+        && is_string($response['responseData']['translatedText'])
+        && trim($response['responseData']['translatedText']) !== ''
+    ) {
+        $translatedText = $response['responseData']['translatedText'];
+    } elseif (is_array($response) && isset($response['matches']) && is_array($response['matches'])) {
+        foreach ($response['matches'] as $match) {
+            if (
+                is_array($match)
+                && isset($match['translation'])
+                && is_string($match['translation'])
+                && trim($match['translation']) !== ''
+            ) {
+                $translatedText = $match['translation'];
+                break;
+            }
+        }
+    }
 } elseif (is_array($response) && isset($response[0]) && is_array($response[0])) {
     $segments = [];
     foreach ($response[0] as $segment) {

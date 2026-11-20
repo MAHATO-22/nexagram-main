@@ -8,7 +8,7 @@ Nexagram is a PHP + MySQL social app (Laragon/XAMPP-style stack) with posts, fri
 2. Start Apache and MySQL.
 3. Create a MySQL database (default name: `nexa`).
 4. Import `nexa.sql`.
-5. Run migrations in `migrations/` if needed (e.g. `migrations/20261020_add_group_chats.sql` for group chats).
+5. Run migrations in `migrations/` if needed (e.g. `migrations/20261020_add_group_chats.sql` for group chats and `migrations/20261120_add_password_reset.sql` for password reset).
 6. Configure DB credentials in `php/env.php` (see `php/env.example.php`).
 7. Open the app in your browser (e.g. `http://localhost/nexagram-main/`).
 
